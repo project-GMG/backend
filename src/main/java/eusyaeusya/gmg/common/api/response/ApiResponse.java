@@ -1,15 +1,11 @@
-package eusyaeusya.gmg.common.controller.response;
+package eusyaeusya.gmg.common.api.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import eusyaeusya.gmg.common.exception.ErrorCode;
+import eusyaeusya.gmg.common.api.response.code.ErrorCode;
+import eusyaeusya.gmg.common.api.response.code.SuccessCode;
 
-public class ApiResponse<T> {
-    private final String code;
-    private final String message;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private final T data;
-
-    private ApiResponse(String code, String message, T data) {
+public record ApiResponse<T>(String code, String message, @JsonInclude(JsonInclude.Include.NON_NULL) T data) {
+    public ApiResponse(String code, String message, T data) {
         this.code = code;
         this.message = message;
         this.data = data;
