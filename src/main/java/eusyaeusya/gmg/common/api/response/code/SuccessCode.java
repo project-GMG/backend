@@ -1,4 +1,4 @@
-package eusyaeusya.gmg.common.controller.response;
+package eusyaeusya.gmg.common.api.response.code;
 
 public interface SuccessCode {
     String getValue();

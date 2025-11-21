@@ -1,19 +1,18 @@
-package eusyaeusya.gmg.common.controller;
+package eusyaeusya.gmg.common.api.exception;
 
-import eusyaeusya.gmg.common.controller.response.ApiResponse;
+import eusyaeusya.gmg.common.api.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import static eusyaeusya.gmg.common.exception.CommonErrorCode.INTERNAL_SERVER_ERROR;
+import static eusyaeusya.gmg.common.api.exception.CommonErrorCode.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.ResponseEntity.internalServerError;
 
 @Slf4j
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order
 @RestControllerAdvice
 public class CommonExceptionHandler {
     // 리소스를 찾을 수 없는 예외 처리

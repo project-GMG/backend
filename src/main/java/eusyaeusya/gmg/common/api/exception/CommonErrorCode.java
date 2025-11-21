@@ -1,5 +1,6 @@
-package eusyaeusya.gmg.common.exception;
+package eusyaeusya.gmg.common.api.exception;
 
+import eusyaeusya.gmg.common.api.response.code.ErrorCode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
