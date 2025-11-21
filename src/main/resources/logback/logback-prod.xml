@@ -1,56 +1,11 @@
-<!--logback/logback-dev.xml-->
+<!-- logback/logback-prod.xml -->
 <configuration>
-    <!-- 공통 변수 지정 -->
+    <!-- 공통 변수 -->
     <property name="FILE_LOG_PATTERN"
-              value="[%d{yyyy-MM-dd HH:mm:ss,Asia/Seoul}] [dev] [%thread] [%X{traceId}] %-5level [%C.%M:%L] - %msg%n"/>
+              value="[%d{yyyy-MM-dd HH:mm:ss,Asia/Seoul}] [prod] [%thread] [%X{traceId}] %-5level [%C.%M:%L] - %msg%n"/>
     <property name="LOGS_ROOT_PATH" value="/logs"/>
 
-    <!-- Console -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
-        </encoder>
-    </appender>
-
-    <!-- TRACE 로그 설정 -->
-    <appender name="TRACE_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS_ROOT_PATH}/trace/trace.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS_ROOT_PATH}/trace/trace-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>7</maxHistory>
-            <totalSizeCap>500MB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>TRACE</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <!-- DEBUG 로그 설정 -->
-    <appender name="DEBUG_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS_ROOT_PATH}/debug/debug.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS_ROOT_PATH}/debug/debug-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>14</maxHistory>
-            <totalSizeCap>800MB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>DEBUG</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <!-- INFO 로그 설정 -->
+    <!-- INFO 로그 -->
     <appender name="INFO_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS_ROOT_PATH}/info/info.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -69,7 +24,7 @@
         </filter>
     </appender>
 
-    <!-- WARN 로그 설정 -->
+    <!-- WARN 로그 -->
     <appender name="WARN_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS_ROOT_PATH}/warn/warn.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -88,7 +43,7 @@
         </filter>
     </appender>
 
-    <!-- ERROR 로그 설정 -->
+    <!-- ERROR 로그 -->
     <appender name="ERROR_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS_ROOT_PATH}/error/error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -107,13 +62,23 @@
         </filter>
     </appender>
 
-    <!-- Logger 설정 -->
-    <root level="TRACE">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="TRACE_LOG_FILE"/>
-        <appender-ref ref="DEBUG_LOG_FILE"/>
+    <!-- Async Wrapping -->
+    <appender name="ASYNC_INFO" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="INFO_LOG_FILE"/>
+        <queueSize>5000</queueSize>
+    </appender>
+
+    <appender name="ASYNC_WARN" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="WARN_LOG_FILE"/>
+    </appender>
+
+    <appender name="ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="ERROR_LOG_FILE"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="ASYNC_INFO"/>
+        <appender-ref ref="ASYNC_WARN"/>
+        <appender-ref ref="ASYNC_ERROR"/>
     </root>
 </configuration>
