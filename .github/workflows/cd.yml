@@ -7,10 +7,12 @@ on:
 env:
   REGISTRY: ${{ secrets.AZURE_REGISTRY_NAME }}
   IMAGE_NAME: myapp
+  ENVIRONMENT: dev
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: dev  # GitHub Environment 사용 시
 
     steps:
       - name: Checkout the code
@@ -32,7 +34,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./docker
+          context: .
           file: ./docker/Dockerfile
           push: true
           tags: |
@@ -66,13 +68,16 @@ jobs:
             
             # 이전 이미지 정리
             docker image prune -af
-      - name: notify discord
+
+      - name: Notify Discord
         if: always()
         uses: tsickert/discord-webhook@v7.0.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          embed-title: "배포 결과는??"
+          embed-title: "🚀 Dev 환경 배포 결과"
           embed-description: |
-            Envoironment: backend - ${{ matrix.environment }}
-            Result : ${{ steps.deploy.outcome == 'success' && '😊 성공!!' || '🥲 실패!' }}
+            **Environment:** dev
+            **Branch:** ${{ github.ref_name }}
+            **Commit:** ${{ github.sha }}
+            **Result:** ${{ steps.deploy.outcome == 'success' && '✅ 성공!!' || '❌ 실패!' }}
           embed-color: ${{ steps.deploy.outcome == 'success' && '3066993' || '15158332' }}
