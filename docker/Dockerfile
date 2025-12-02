@@ -1,6 +1,13 @@
 FROM gradle:8.5-jdk17 AS build
 WORKDIR /app
-COPY . .
+
+COPY build.gradle settings.gradle /app/
+COPY gradlew /app/
+
+RUN gradle clean build --dry-run || true
+
+COPY src /app/src/
+
 RUN gradle clean build -x test
 
 FROM openjdk:17-slim

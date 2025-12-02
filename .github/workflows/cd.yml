@@ -32,13 +32,15 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./docker
+          file: ./docker/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Deploy to Azure VM
+        id: deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VM_HOST }}
@@ -53,14 +55,14 @@ jobs:
             docker rm myapp || true
             
             # 최신 이미지 pull
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             
             # 새 컨테이너 실행
             docker run -d \
               --name myapp \
               -p 8080:8080 \
               --restart unless-stopped \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             
             # 이전 이미지 정리
             docker image prune -af
@@ -72,5 +74,5 @@ jobs:
           embed-title: "배포 결과는??"
           embed-description: |
             Envoironment: backend - ${{ matrix.environment }}
-            Result : ${{ steps.deploy-status.outcome == 'success' && '😊 성공!!' || '🥲 실패!' }}
-          embed-color: ${{ steps.deploy-status.outcome == 'success' && '3066993' || '15158332' }}
+            Result : ${{ steps.deploy.outcome == 'success' && '😊 성공!!' || '🥲 실패!' }}
+          embed-color: ${{ steps.deploy.outcome == 'success' && '3066993' || '15158332' }}
