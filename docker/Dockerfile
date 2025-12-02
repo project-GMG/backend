@@ -10,7 +10,7 @@ COPY src /app/src/
 
 RUN gradle clean build -x test
 
-FROM openjdk:17-slim
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 ARG SPRINGBOOT_APP_PROFILE
