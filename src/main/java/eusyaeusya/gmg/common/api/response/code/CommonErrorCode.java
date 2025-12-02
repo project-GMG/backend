@@ -1,6 +1,5 @@
-package eusyaeusya.gmg.common.api.exception;
+package eusyaeusya.gmg.common.api.response.code;
 
-import eusyaeusya.gmg.common.api.response.code.ErrorCode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -8,8 +7,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter
 public enum CommonErrorCode implements ErrorCode {
-    INTERNAL_SERVER_ERROR("IA-0001"), // -> 나중에 규칙이 있는 에러코드로 변경 (IA-0001)
-    ;
+    INTERNAL_SERVER_ERROR("CM-0001"),
+    INVALID_REQUEST("CM-0002"),
+    RESOURCE_NOT_FOUND("CM-0003");
 
     private final String value;
 }

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import static eusyaeusya.gmg.common.api.exception.CommonErrorCode.INTERNAL_SERVER_ERROR;
+import static eusyaeusya.gmg.common.api.response.code.CommonErrorCode.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.ResponseEntity.internalServerError;
 
 @Slf4j
