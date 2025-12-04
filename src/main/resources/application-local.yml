@@ -20,6 +20,20 @@ spring:
       settings:
         web-allow-others: false
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  health:
+    defaults:
+      enabled: true
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
