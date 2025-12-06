@@ -8,11 +8,15 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
+  flyway:
+    enabled: true
+    clean-disabled: true #clean 명령 금지
+    validate-on-migrate: true
 
 management:
   endpoints:

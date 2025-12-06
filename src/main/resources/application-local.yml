@@ -6,12 +6,13 @@ spring:
     password:
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     database-platform: org.hibernate.dialect.H2Dialect
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+    defer-datasource-initialization: true
 
   h2:
     console:
@@ -19,6 +20,9 @@ spring:
       path: /h2-console
       settings:
         web-allow-others: false
+
+  flyway:
+    enabled: false
 
 management:
   endpoints:
