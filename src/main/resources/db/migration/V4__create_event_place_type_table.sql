@@ -10,8 +10,8 @@ CREATE TABLE event_place_types (
                                    CONSTRAINT fk_event_place_types_event
                                        FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
                                    CONSTRAINT fk_event_place_types_place_type
-                                       FOREIGN KEY (place_type_id) REFERENCES place_types(id) ON DELETE RESTRICT,
-) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                                       FOREIGN KEY (place_type_id) REFERENCES place_types(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 인덱스 생성
 CREATE INDEX idx_event_id ON event_place_types(event_id);
