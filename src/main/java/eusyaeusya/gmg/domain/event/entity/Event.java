@@ -28,7 +28,7 @@ import java.time.temporal.ChronoUnit;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Event extends BaseTimeEntity {
 
-    private static final int MAX_DATE_RANGE_DAYS = 31;
+    private static final int MAX_DATE_RANGE_DAYS = 35;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
