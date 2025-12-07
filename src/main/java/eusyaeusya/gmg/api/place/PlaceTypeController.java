@@ -1,8 +1,8 @@
 package eusyaeusya.gmg.api.place;
 
 import eusyaeusya.gmg.api.place.response.PlaceSuccessCode;
+import eusyaeusya.gmg.api.place.response.PlaceTypeResponse;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
-import eusyaeusya.gmg.domain.place.dto.PlaceTypeResponse;
 import eusyaeusya.gmg.domain.place.service.PlaceTypeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,8 +1,8 @@
 package eusyaeusya.gmg.domain.place.service;
 
 import eusyaeusya.gmg.api.place.response.PlaceErrorCode;
+import eusyaeusya.gmg.api.place.response.PlaceTypeResponse;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
-import eusyaeusya.gmg.domain.place.dto.PlaceTypeResponse;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
 import eusyaeusya.gmg.domain.place.repository.PlaceTypeRepository;
 import lombok.RequiredArgsConstructor;

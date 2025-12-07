@@ -1,4 +1,4 @@
-package eusyaeusya.gmg.domain.place.dto;
+package eusyaeusya.gmg.api.place.response;
 
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
 
