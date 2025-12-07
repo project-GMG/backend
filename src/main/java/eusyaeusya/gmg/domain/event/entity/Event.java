@@ -1,5 +1,7 @@
 package eusyaeusya.gmg.domain.event.entity;
 
+import eusyaeusya.gmg.api.event.response.EventErrorCode;
+import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.audit.entity.BaseTimeEntity;
 import eusyaeusya.gmg.domain.event.util.EventHashUrlGenerator;
 import jakarta.persistence.*;
@@ -11,6 +13,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(
@@ -24,6 +27,9 @@ import java.time.LocalTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Event extends BaseTimeEntity {
+
+    private static final int MAX_DATE_RANGE_DAYS = 31;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -76,6 +82,11 @@ public class Event extends BaseTimeEntity {
             EventStatus status,
             String timezone
     ) {
+        // 날짜 범위 검증
+        validateDateRange(dateStart, dateEnd);
+
+        // 시간 범위 검증
+        validateTimeRange(timeStart, timeEnd);
         this.hashUrl = hashUrl;
         this.title = title;
         this.centerLatitude = centerLatitude;
@@ -110,5 +121,31 @@ public class Event extends BaseTimeEntity {
                 .timeStart(timeStart)
                 .timeEnd(timeEnd)
                 .build();
+    }
+
+    private static void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate.isAfter(endDate)) {
+            throw new BadRequestException(
+                    EventErrorCode.INVALID_DATE_RANGE,
+                    "시작 날짜는 종료 날짜보다 이전이어야 합니다"
+            );
+        }
+
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        if (daysBetween > MAX_DATE_RANGE_DAYS) {
+            throw new BadRequestException(
+                    EventErrorCode.DATE_RANGE_TOO_LONG,
+                    String.format("날짜 범위는 최대 %d일을 초과할 수 없습니다", MAX_DATE_RANGE_DAYS)
+            );
+        }
+    }
+
+    private static void validateTimeRange(LocalTime startTime, LocalTime endTime) {
+        if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
+            throw new BadRequestException(
+                    EventErrorCode.INVALID_TIME_RANGE,
+                    "시작 시간은 종료 시간보다 이전이어야 합니다"
+            );
+        }
     }
 }
