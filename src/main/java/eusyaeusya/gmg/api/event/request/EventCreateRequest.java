@@ -48,7 +48,7 @@ public record EventCreateRequest(
 
     public record DateRangeInfo(
             @NotNull(message = "시작 날짜는 필수입니다")
-            @Future(message = "시작 날짜는 현재 날짜 이후여야 합니다")
+            @FutureOrPresent(message = "시작 날짜는 현재 날짜 또는 이후여야 합니다")
             LocalDate startDate,
 
             @NotNull(message = "종료 날짜는 필수입니다")
