@@ -17,7 +17,7 @@ CREATE TABLE events (
 
                         CONSTRAINT pk_events PRIMARY KEY (id),
                         CONSTRAINT uc_events_hash_url UNIQUE (hash_url)
-) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) DEFAULT ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 인덱스 생성
 CREATE INDEX idx_hash_url ON events(hash_url);
