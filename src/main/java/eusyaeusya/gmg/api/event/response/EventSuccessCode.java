@@ -1,0 +1,15 @@
+package eusyaeusya.gmg.api.event.response;
+
+import eusyaeusya.gmg.common.api.response.code.SuccessCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor(access = lombok.AccessLevel.PACKAGE)
+@Getter
+public enum EventSuccessCode implements SuccessCode {
+    EVENT_RETRIEVED("EV-S0001", "이벤트 생성 성공했습니다."),
+    ;
+
+    private final String value;
+    private final String message;
+}

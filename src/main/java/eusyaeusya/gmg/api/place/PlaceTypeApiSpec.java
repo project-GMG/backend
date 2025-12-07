@@ -1,7 +1,7 @@
 package eusyaeusya.gmg.api.place;
 
+import eusyaeusya.gmg.api.place.response.PlaceTypeResponse;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
-import eusyaeusya.gmg.domain.place.dto.PlaceTypeResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 

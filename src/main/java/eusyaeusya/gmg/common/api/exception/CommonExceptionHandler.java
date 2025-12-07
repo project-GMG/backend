@@ -3,23 +3,46 @@ package eusyaeusya.gmg.common.api.exception;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import static eusyaeusya.gmg.common.api.response.code.CommonErrorCode.INTERNAL_SERVER_ERROR;
+import static eusyaeusya.gmg.common.api.response.code.CommonErrorCode.INVALID_REQUEST;
 import static org.springframework.http.ResponseEntity.internalServerError;
 
 @Slf4j
 @Order
 @RestControllerAdvice
 public class CommonExceptionHandler {
-    // 리소스를 찾을 수 없는 예외 처리
-    @ExceptionHandler//메서드가 특정 예외를 처리하게 만든다 -> 파라미터 타입을 기준으로 자동 매핑
-    public ResponseEntity<ApiResponse<Void>> handleNoResourceFoundException(final NoResourceFoundException ex) {
-        log.warn("No resource found exception: {}", ex.getResourcePath());
-        return ResponseEntity.notFound().build();
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFoundException(final NotFoundException ex) {
+        log.warn("Not found exception: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail(ex.getErrorCode(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequestException(final BadRequestException ex) {
+        log.warn("Bad request exception: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(ex.getErrorCode(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(final MethodArgumentNotValidException ex) {
+        log.warn("Method argument not valid exception: {}", ex.getMessage());
+        String combinedErrorMessage = ex.getBindingResult().getAllErrors().stream()
+                .map(error -> {
+                    if (error instanceof FieldError fieldError) {
+                        return fieldError.getField() + ": " + error.getDefaultMessage();
+                    }
+                    return error.getObjectName() + ": " + error.getDefaultMessage();
+                })
+                .collect(java.util.stream.Collectors.joining(" | "));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(INVALID_REQUEST, combinedErrorMessage));
     }
 
     // 모든 예외를 처리하는 기본 핸들러
