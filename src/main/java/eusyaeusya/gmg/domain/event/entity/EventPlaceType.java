@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
         name = "event_place_types",
         indexes = {
                 @Index(name = "idx_event_id", columnList = "event_id"),
-                @Index(name = "idx_place_type_id", columnList = "event_id, place_type_id", unique = true)
+                @Index(name = "idx_event_place_type", columnList = "event_id, place_type_id", unique = true)
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
