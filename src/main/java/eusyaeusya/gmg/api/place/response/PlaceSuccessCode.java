@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter
 public enum PlaceSuccessCode implements SuccessCode {
-    PLACE_TYPES_RETRIEVED("PL-0001", "장소 타입 목록을 조회했습니다");
+    PLACE_TYPES_RETRIEVED("PL-S0001", "장소 타입 목록을 조회했습니다");
 
     private final String value;
     private final String message;
