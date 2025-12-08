@@ -28,3 +28,10 @@ DROP TABLE IF EXISTS place_types;
 ... //기존 테이블 다 지우고
 DROP TABLE IF EXISTS flyway_schema_history;
 ```
+
+---
+
+# dev에 push 할때마다 CD workflow 수동실행
+- 기존에 자동으로 실행되던걸 수동 실행으로 바꿈 -> 너무 빈번한 배포를 줄이기 위해
+<img width="2735" height="722" alt="image" src="https://github.com/user-attachments/assets/a88bad08-dc61-4c1e-b860-9455b2530e22" />
+
