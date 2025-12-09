@@ -21,5 +21,5 @@ CREATE TABLE events (
 
 -- 인덱스 생성
 CREATE INDEX idx_hash_url ON events(hash_url);
-CREATE INDEX idx_status ON events(status);
+CREATE INDEX idx_event_status ON events(status);
 CREATE INDEX idx_created_at ON events(created_at);
