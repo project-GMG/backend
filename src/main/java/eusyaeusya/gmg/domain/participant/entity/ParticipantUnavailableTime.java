@@ -1,5 +1,7 @@
 package eusyaeusya.gmg.domain.participant.entity;
 
+import eusyaeusya.gmg.api.participant.response.ParticipantErrorCode;
+import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -56,6 +58,8 @@ public class ParticipantUnavailableTime {
             LocalTime unavailableTimeStart,
             LocalTime unavailableTimeEnd
     ) {
+        validateDate(event, unavailableDate);
+
         this.event = event;
         this.participant = participant;
         this.unavailableDate = unavailableDate;
@@ -78,5 +82,14 @@ public class ParticipantUnavailableTime {
                 .unavailableTimeStart(startTime)
                 .unavailableTimeEnd(endTime)
                 .build();
+    }
+
+    private void validateDate(Event event, LocalDate unavailableDate) {
+        if (unavailableDate.isBefore(event.getDateStart()) || unavailableDate.isAfter(event.getDateEnd())) {
+            throw new BadRequestException(
+                    ParticipantErrorCode.INVALID_UNAVAILABLE_DATE,
+                    String.format("참여할 수 없는 날입니다: %s", unavailableDate)
+            );
+        }
     }
 }
