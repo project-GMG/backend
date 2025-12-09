@@ -59,6 +59,7 @@ public class ParticipantUnavailableTime {
             LocalTime unavailableTimeEnd
     ) {
         validateDate(event, unavailableDate);
+        validateTime(event, unavailableTimeStart, unavailableTimeEnd);
 
         this.event = event;
         this.participant = participant;
@@ -89,6 +90,16 @@ public class ParticipantUnavailableTime {
             throw new BadRequestException(
                     ParticipantErrorCode.INVALID_UNAVAILABLE_DATE,
                     String.format("참여할 수 없는 날입니다: %s", unavailableDate)
+            );
+        }
+    }
+
+    private void validateTime(Event event, LocalTime unavailableTimeStart, LocalTime unavailableTimeEnd) {
+        if (unavailableTimeStart.isBefore(event.getTimeStart())
+                || unavailableTimeEnd.isAfter(event.getTimeEnd())) {
+            throw new BadRequestException(
+                    ParticipantErrorCode.INVALID_UNAVAILABLE_TIME,
+                    String.format("참여할 수 없는 시간입니다: %s ~ %s", unavailableTimeStart, unavailableTimeEnd)
             );
         }
     }
