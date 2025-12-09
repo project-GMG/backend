@@ -3,5 +3,8 @@ package eusyaeusya.gmg.domain.event.repository;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface EventRepository extends JpaRepository<Event, Long> {
+    Optional<Event> findByHashUrl(String hashUrl);
 }
