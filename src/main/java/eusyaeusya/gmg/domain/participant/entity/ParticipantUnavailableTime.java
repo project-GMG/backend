@@ -16,8 +16,6 @@ import java.time.LocalTime;
 @Table(
         name = "participant_unavailable_times",
         indexes = {
-                @Index(name = "idx_participant_unavailable_time_id_participant_id", columnList = "participant_id"),
-                @Index(name = "idx_participant_unavailable_time_id", columnList = "event_id"),
                 @Index(name = "idx_event_date_time", columnList = "event_id, unavailable_date, unavailable_time_start"),
                 @Index(name = "idx_participant_date", columnList = "participant_id, unavailable_date")
         }
