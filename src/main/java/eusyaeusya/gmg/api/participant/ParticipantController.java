@@ -1,6 +1,5 @@
-package eusyaeusya.gmg.api;
+package eusyaeusya.gmg.api.participant;
 
-import eusyaeusya.gmg.api.participant.ParticipantApiSpec;
 import eusyaeusya.gmg.api.participant.requset.ParticipantNameJoinRequest;
 import eusyaeusya.gmg.api.participant.response.ParticipantNameJoinResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantSuccessCode;
