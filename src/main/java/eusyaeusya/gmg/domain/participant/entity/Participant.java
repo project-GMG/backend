@@ -12,9 +12,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "participants",
         indexes = {
-                @Index(name = "idx_event_id", columnList = "event_id"),
-                @Index(name = "idx_event_participant", columnList = "event_id, name"),
-                @Index(name = "idx_status", columnList = "status")
+                @Index(name = "idx_event_participant", columnList = "event_id, name")
         }
 )
 @Getter
@@ -51,5 +49,9 @@ public class Participant {
 
     public static Participant create(Event event, String name) {
         return new Participant(event, name);
+    }
+
+    public boolean isNotBelongsToEvent(Event event) {
+        return !this.event.equals(event);
     }
 }

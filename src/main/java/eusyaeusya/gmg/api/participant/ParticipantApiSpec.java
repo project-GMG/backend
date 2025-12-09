@@ -1,7 +1,9 @@
 package eusyaeusya.gmg.api.participant;
 
 import eusyaeusya.gmg.api.participant.requset.ParticipantNameJoinRequest;
+import eusyaeusya.gmg.api.participant.requset.ParticipantUnavailableTimeRequest;
 import eusyaeusya.gmg.api.participant.response.ParticipantNameJoinResponse;
+import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Tag(name = "Participant API", description = "참여자 관련 기능을 제공합니다")
 public interface ParticipantApiSpec {
     @Operation(
-            summary = "참여자 등록",
-            description = "이벤트에 참여자를 등록합니다. 이벤트가 OPEN 상태일 때만 가능합니다"
+            summary = "참여자 이름 등록",
+            description = "참여자 이름을 등록합니다. 이벤트가 OPEN 상태일 때만 가능합니다"
     )
     @PostMapping
     ApiResponse<ParticipantNameJoinResponse> joinEvent(
@@ -23,4 +25,17 @@ public interface ParticipantApiSpec {
             @PathVariable
             String hashUrl,
             @Valid @RequestBody ParticipantNameJoinRequest request);
+
+    @Operation(
+            summary = "참여자의 불가능한 시간 등록",
+            description = "참여자의 불가능한 시간대를 등록합니다."
+    )
+    @PostMapping
+    ApiResponse<ParticipantUnavailableTimeResponse> registerUnavailableTimes(
+            @Parameter(description = "이벤트 해시 URL", example = "abc123")
+            @PathVariable String hashUrl,
+            @Parameter(description = "사용자 id", example = "1")
+            @PathVariable Long participantId,
+            @Valid @RequestBody ParticipantUnavailableTimeRequest request
+    );
 }
