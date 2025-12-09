@@ -148,4 +148,8 @@ public class Event extends BaseTimeEntity {
             );
         }
     }
+
+    public boolean isClosed() {
+        return status == EventStatus.CLOSED;
+    }
 }
