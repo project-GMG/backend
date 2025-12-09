@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum ParticipantSuccessCode implements SuccessCode {
     PARTICIPANT_JOINED("PT-S0001", "참여자 등록이 완료되었습니다"),
+    UNAVAILABLE_TIME_REGISTERED("PT-S0002", "불가능한 시간 등록이 완료되었습니다"),
     ;
     private final String value;
     private final String message;
