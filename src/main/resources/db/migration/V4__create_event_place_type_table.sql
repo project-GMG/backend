@@ -14,5 +14,5 @@ CREATE TABLE event_place_types (
 );
 
 -- 인덱스 생성
-CREATE INDEX idx_event_id ON event_place_types(event_id);
+CREATE INDEX idx_event_place_type_event_id ON event_place_types(event_id);
 CREATE UNIQUE INDEX idx_event_place_type ON event_place_types(event_id, place_type_id);
