@@ -52,4 +52,8 @@ public class Participant {
     public static Participant create(Event event, String name) {
         return new Participant(event, name);
     }
+
+    public boolean isNotBelongsToEvent(Event event) {
+        return !this.event.equals(event);
+    }
 }
