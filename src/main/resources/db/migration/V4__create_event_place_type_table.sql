@@ -1,11 +1,10 @@
--- Event Place Types 중간 테이블 생성
 CREATE TABLE event_place_types (
                                    id BIGINT AUTO_INCREMENT NOT NULL,
                                    event_id BIGINT NOT NULL,
                                    place_type_id BIGINT NOT NULL,
                                    selected_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-                                   CONSTRAINT pk_event_place_types PRIMARY KEY (id),
+                                   CONSTRAINT pk_event_place_types PRIMARY KEY (id)
 );
 
 ALTER TABLE event_place_types
