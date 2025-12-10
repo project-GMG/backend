@@ -1,11 +1,11 @@
-package eusyaeusya.gmg.api.place.response;
+package eusyaeusya.gmg.api.event.response;
 
 import eusyaeusya.gmg.domain.place.entity.PlaceCategory;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
 
 import java.util.List;
 
-public record PlaceTypeWithCategoriesResponse(
+public record EventPlaceTypeCategoriesResponse(
         List<PlaceTypeWithCategories> placeTypes
 ) {
     public record PlaceTypeWithCategories(
