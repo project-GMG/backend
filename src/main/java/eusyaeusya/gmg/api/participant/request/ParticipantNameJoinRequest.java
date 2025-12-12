@@ -1,4 +1,4 @@
-package eusyaeusya.gmg.api.participant.requset;
+package eusyaeusya.gmg.api.participant.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

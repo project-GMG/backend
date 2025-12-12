@@ -1,7 +1,9 @@
 package eusyaeusya.gmg.api.participant;
 
-import eusyaeusya.gmg.api.participant.requset.ParticipantNameJoinRequest;
-import eusyaeusya.gmg.api.participant.requset.ParticipantUnavailableTimeRequest;
+import eusyaeusya.gmg.api.participant.request.ParticipantDislikedRequest;
+import eusyaeusya.gmg.api.participant.request.ParticipantNameJoinRequest;
+import eusyaeusya.gmg.api.participant.request.ParticipantUnavailableTimeRequest;
+import eusyaeusya.gmg.api.participant.response.ParticipantDislikedResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantNameJoinResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
@@ -37,5 +39,18 @@ public interface ParticipantApiSpec {
             @Parameter(description = "사용자 id", example = "1")
             @PathVariable Long participantId,
             @Valid @RequestBody ParticipantUnavailableTimeRequest request
+    );
+
+    @Operation(
+            summary = "참여자의 비선호 카테고리 및 장소 등록",
+            description = "참여자의 비선호 카테고리와 장소를 등록합니다."
+    )
+    @PostMapping
+    ApiResponse<ParticipantDislikedResponse> registerDisliked(
+            @Parameter(description = "이벤트 해시 URL", example = "abc123")
+            @PathVariable String hashUrl,
+            @Parameter(description = "참여자 ID", example = "1")
+            @PathVariable Long participantId,
+            @Valid @RequestBody ParticipantDislikedRequest request
     );
 }

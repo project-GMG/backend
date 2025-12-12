@@ -1,7 +1,7 @@
 package eusyaeusya.gmg.domain.participant.service;
 
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
-import eusyaeusya.gmg.api.participant.requset.ParticipantNameJoinRequest;
+import eusyaeusya.gmg.api.participant.request.ParticipantNameJoinRequest;
 import eusyaeusya.gmg.api.participant.response.ParticipantNameJoinResponse;
 import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;

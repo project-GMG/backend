@@ -1,4 +1,4 @@
-package eusyaeusya.gmg.api.participant.requset;
+package eusyaeusya.gmg.api.participant.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;

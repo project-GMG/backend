@@ -1,7 +1,7 @@
 package eusyaeusya.gmg.domain.participant.service;
 
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
-import eusyaeusya.gmg.api.participant.requset.ParticipantUnavailableTimeRequest;
+import eusyaeusya.gmg.api.participant.request.ParticipantUnavailableTimeRequest;
 import eusyaeusya.gmg.api.participant.response.ParticipantErrorCode;
 import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
 import eusyaeusya.gmg.common.api.exception.BadRequestException;
