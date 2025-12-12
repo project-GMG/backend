@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/event/{hashUrl}/particiants")
+@RequestMapping("/api/event/{hashUrl}/participants")
 @RequiredArgsConstructor
 public class ParticipantController implements ParticipantApiSpec {
 

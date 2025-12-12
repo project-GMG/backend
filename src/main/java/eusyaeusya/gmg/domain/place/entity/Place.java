@@ -48,7 +48,7 @@ public class Place extends BaseTimeEntity {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
-    @Column(precision = 2, scale = 1)
+    @Column(precision = 2, scale = 1, nullable = false)
     private BigDecimal rating;
 
     @Column(name = "open_hours_json", columnDefinition = "TEXT")
