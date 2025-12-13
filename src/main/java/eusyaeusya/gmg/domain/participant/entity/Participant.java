@@ -54,4 +54,12 @@ public class Participant {
     public boolean isNotBelongsToEvent(Event event) {
         return !this.event.equals(event);
     }
+
+    public void complete() {
+        if (this.participantStatus == ParticipantStatus.COMPLETED) {
+            return;
+        }
+        this.participantStatus = ParticipantStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+    }
 }

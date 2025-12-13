@@ -3,10 +3,7 @@ package eusyaeusya.gmg.api.participant;
 import eusyaeusya.gmg.api.participant.request.ParticipantDislikedRequest;
 import eusyaeusya.gmg.api.participant.request.ParticipantNameJoinRequest;
 import eusyaeusya.gmg.api.participant.request.ParticipantUnavailableTimeRequest;
-import eusyaeusya.gmg.api.participant.response.ParticipantDislikedResponse;
-import eusyaeusya.gmg.api.participant.response.ParticipantNameJoinResponse;
-import eusyaeusya.gmg.api.participant.response.ParticipantSuccessCode;
-import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
+import eusyaeusya.gmg.api.participant.response.*;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
 import eusyaeusya.gmg.domain.participant.service.ParticipantDislikedService;
 import eusyaeusya.gmg.domain.participant.service.ParticipantService;
@@ -74,6 +71,24 @@ public class ParticipantController implements ParticipantApiSpec {
 
         return ApiResponse.successWithData(
                 ParticipantSuccessCode.DISLIKED_REGISTERED,
+                response
+        );
+    }
+
+    @Override
+    @PostMapping("/{participantId}/complete")
+    public ApiResponse<ParticipantCompleteResponse> completeParticipation(
+            @PathVariable String hashUrl,
+            @PathVariable Long participantId
+    ) {
+        log.info("POST /event/{}/participants/{}/complete - 참여자 정보 입력 완료",
+                hashUrl, participantId);
+
+        ParticipantCompleteResponse response =
+                participantService.completeParticipation(hashUrl, participantId);
+
+        return ApiResponse.successWithData(
+                ParticipantSuccessCode.PARTICIPANT_COMPLETED,
                 response
         );
     }

@@ -3,6 +3,7 @@ package eusyaeusya.gmg.api.participant;
 import eusyaeusya.gmg.api.participant.request.ParticipantDislikedRequest;
 import eusyaeusya.gmg.api.participant.request.ParticipantNameJoinRequest;
 import eusyaeusya.gmg.api.participant.request.ParticipantUnavailableTimeRequest;
+import eusyaeusya.gmg.api.participant.response.ParticipantCompleteResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantDislikedResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantNameJoinResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
@@ -52,5 +53,17 @@ public interface ParticipantApiSpec {
             @Parameter(description = "참여자 ID", example = "1")
             @PathVariable Long participantId,
             @Valid @RequestBody ParticipantDislikedRequest request
+    );
+
+    @Operation(
+            summary = "참여자 정보 입력 완료",
+            description = "참여자의 시간/장소 비선호 입력을 완료하고 COMPLETED 상태로 변경합니다."
+    )
+    @PostMapping
+    ApiResponse<ParticipantCompleteResponse> completeParticipation(
+            @Parameter(description = "이벤트 해시 URL", example = "abc123")
+            @PathVariable String hashUrl,
+            @Parameter(description = "참여자 ID", example = "1")
+            @PathVariable Long participantId
     );
 }
