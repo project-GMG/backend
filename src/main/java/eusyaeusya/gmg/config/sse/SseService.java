@@ -1,5 +1,6 @@
 package eusyaeusya.gmg.config.sse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eusyaeusya.gmg.api.event.response.EventHeatmapStreamResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class SseService {
 
     private static final Long DEFAULT_TIMEOUT = 60 * 60 * 1000L; // 1시간
+    private final ObjectMapper objectMapper;
 
     private final Map<String, CopyOnWriteArrayList<SseEmitter>> emittersByEvent = new ConcurrentHashMap<>();
 
