@@ -2,16 +2,19 @@ package eusyaeusya.gmg.api.event;
 
 import eusyaeusya.gmg.api.event.request.EventCreateRequest;
 import eusyaeusya.gmg.api.event.response.EventCreateResponse;
+import eusyaeusya.gmg.api.event.response.EventMainResponse;
 import eusyaeusya.gmg.api.event.response.EventPlaceTypeCategoriesResponse;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Tag(name = "Event API", description = "이벤트 관련 기능을 제공합니다.")
 public interface EventApiSpec {
@@ -34,4 +37,22 @@ public interface EventApiSpec {
             @Parameter(description = "이벤트 해시 URL", example = "abc123")
             @PathVariable String hashUrl
     );
+
+    @Operation(
+            summary = "이벤트 메인 페이지 정보 조회",
+            description = """
+                    초기 히트맵 데이터를 포함한 모임 정보를 조회합니다
+                    """
+    )
+    @GetMapping("/{hashUrl}")
+    ApiResponse<EventMainResponse> getEventMain(@PathVariable String hashUrl);
+
+    @Operation(
+            summary = "히트맵 실시간 스트림 구독",
+            description = """
+                    SSE 방식으로 실시간으로 사용자 데이터를 업데이트 하기 위해 구독합니다.
+                    """
+    )
+    @GetMapping(value = "/{hashUrl}/heatmap/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    SseEmitter streamHeatmap(@PathVariable String hashUrl);
 }
