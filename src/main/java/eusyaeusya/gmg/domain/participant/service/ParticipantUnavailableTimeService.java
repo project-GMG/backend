@@ -1,13 +1,16 @@
 package eusyaeusya.gmg.domain.participant.service;
 
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
+import eusyaeusya.gmg.api.event.response.EventHeatmapStreamResponse;
 import eusyaeusya.gmg.api.participant.request.ParticipantUnavailableTimeRequest;
 import eusyaeusya.gmg.api.participant.response.ParticipantErrorCode;
 import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
 import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
+import eusyaeusya.gmg.config.sse.SseService;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.event.service.HeatmapService;
 import eusyaeusya.gmg.domain.participant.entity.Participant;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantUnavailableTime;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
@@ -28,6 +31,8 @@ public class ParticipantUnavailableTimeService {
     private final ParticipantUnavailableTimeRepository unavailableTimeRepository;
     private final ParticipantRepository participantRepository;
     private final EventRepository eventRepository;
+    private final HeatmapService heatmapService;
+    private final SseService sseService;
 
     @Transactional
     public ParticipantUnavailableTimeResponse registerUnavailableTimes(
@@ -35,7 +40,7 @@ public class ParticipantUnavailableTimeService {
             Long participantId,
             ParticipantUnavailableTimeRequest request
     ) {
-        Event event = getEvent(hashUrl);
+        Event event = getEvent(hashUrl); //TODO: 동시성 제어 필요함
         validateEventStatus(hashUrl, event);
 
         Participant participant = getParticipant(participantId);
@@ -47,6 +52,9 @@ public class ParticipantUnavailableTimeService {
         List<ParticipantUnavailableTime> unavailableTimes =
                 createUnavailableTimes(participantId, request, event, participant);
 
+        EventHeatmapStreamResponse heatmapData = heatmapService.calculateHeatmapForStream(event);
+        sseService.broadcast(hashUrl, heatmapData);
+
         return ParticipantUnavailableTimeResponse.of(participantId, unavailableTimes.size());
     }
 
@@ -57,6 +65,14 @@ public class ParticipantUnavailableTimeService {
                         String.format(EventErrorCode.EVENT_NOT_FOUND.getMessage(), ": %s", hashUrl)
                 ));
     }
+
+    /*private Event getEventWithLock(String hashUrl) {
+        return eventRepository.findByHashUrlWithLock(hashUrl)
+                .orElseThrow(() -> new NotFoundException(
+                        EventErrorCode.EVENT_NOT_FOUND,
+                        String.format(EventErrorCode.EVENT_NOT_FOUND.getMessage(), ": %s", hashUrl)
+                ));
+    }*/
 
     private void validateEventStatus(String hashUrl, Event event) {
         if (event.isClosed()) {

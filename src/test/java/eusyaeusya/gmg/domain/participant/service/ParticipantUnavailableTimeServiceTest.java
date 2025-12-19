@@ -1,13 +1,16 @@
 package eusyaeusya.gmg.domain.participant.service;
 
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
+import eusyaeusya.gmg.api.event.response.EventHeatmapStreamResponse;
 import eusyaeusya.gmg.api.participant.request.ParticipantUnavailableTimeRequest;
 import eusyaeusya.gmg.api.participant.response.ParticipantErrorCode;
 import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
 import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
+import eusyaeusya.gmg.config.sse.SseService;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.event.service.HeatmapService;
 import eusyaeusya.gmg.domain.participant.entity.Participant;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantUnavailableTime;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
@@ -28,10 +31,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ParticipantUnavailableTimeServiceTest {
@@ -46,6 +49,12 @@ class ParticipantUnavailableTimeServiceTest {
 
     @Mock
     private EventRepository eventRepository;
+
+    @Mock
+    private HeatmapService heatmapService;
+
+    @Mock
+    private SseService sseService;
 
     @Test
     @DisplayName("불가능 시간 등록 성공")
@@ -63,6 +72,10 @@ class ParticipantUnavailableTimeServiceTest {
 
         ParticipantUnavailableTimeRequest request = createValidRequest(event);
 
+        // HeatmapService와 SseService Mock 설정
+        EventHeatmapStreamResponse mockHeatmapResponse = mock(EventHeatmapStreamResponse.class);
+        given(heatmapService.calculateHeatmapForStream(event)).willReturn(mockHeatmapResponse);
+
         // when
         ParticipantUnavailableTimeResponse response = unavailableTimeService.registerUnavailableTimes(
                 hashUrl, participantId, request
@@ -76,6 +89,10 @@ class ParticipantUnavailableTimeServiceTest {
         then(unavailableTimeRepository).should().deleteAllByParticipantId(participantId);
         then(unavailableTimeRepository).should().saveAll(captor.capture());
         assertThat(captor.getValue()).hasSize(request.unavailableTimes().size());
+
+        // 히트맵 계산 및 SSE 브로드캐스트 검증
+        then(heatmapService).should(times(1)).calculateHeatmapForStream(event);
+        then(sseService).should(times(1)).broadcast(eq(hashUrl), eq(mockHeatmapResponse));
     }
 
     @Test
@@ -99,6 +116,8 @@ class ParticipantUnavailableTimeServiceTest {
 
         then(participantRepository).shouldHaveNoInteractions();
         then(unavailableTimeRepository).shouldHaveNoInteractions();
+        then(heatmapService).shouldHaveNoInteractions();
+        then(sseService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -123,6 +142,8 @@ class ParticipantUnavailableTimeServiceTest {
 
         then(participantRepository).shouldHaveNoInteractions();
         then(unavailableTimeRepository).shouldHaveNoInteractions();
+        then(heatmapService).shouldHaveNoInteractions();
+        then(sseService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -148,6 +169,8 @@ class ParticipantUnavailableTimeServiceTest {
                 .hasMessageContaining(ParticipantErrorCode.PARTICIPANT_NOT_FOUND.getMessage());
 
         then(unavailableTimeRepository).shouldHaveNoInteractions();
+        then(heatmapService).shouldHaveNoInteractions();
+        then(sseService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -178,6 +201,8 @@ class ParticipantUnavailableTimeServiceTest {
                 );
 
         then(unavailableTimeRepository).shouldHaveNoInteractions();
+        then(heatmapService).shouldHaveNoInteractions();
+        then(sseService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -196,7 +221,11 @@ class ParticipantUnavailableTimeServiceTest {
 
         ParticipantUnavailableTimeRequest request = createValidRequest(event);
 
-        InOrder inOrder = inOrder(unavailableTimeRepository);
+        // HeatmapService와 SseService Mock 설정
+        EventHeatmapStreamResponse mockHeatmapResponse = mock(EventHeatmapStreamResponse.class);
+        given(heatmapService.calculateHeatmapForStream(event)).willReturn(mockHeatmapResponse);
+
+        InOrder inOrder = inOrder(unavailableTimeRepository, heatmapService, sseService);
 
         // when
         ParticipantUnavailableTimeResponse response = unavailableTimeService.registerUnavailableTimes(
@@ -207,8 +236,13 @@ class ParticipantUnavailableTimeServiceTest {
         assertThat(response.registeredCount()).isEqualTo(request.unavailableTimes().size());
 
         ArgumentCaptor<List<ParticipantUnavailableTime>> captor = ArgumentCaptor.forClass(List.class);
+
+        // 순서 검증: 삭제 → 저장 → 히트맵 계산 → SSE 브로드캐스트
         inOrder.verify(unavailableTimeRepository).deleteAllByParticipantId(participantId);
         inOrder.verify(unavailableTimeRepository).saveAll(captor.capture());
+        inOrder.verify(heatmapService).calculateHeatmapForStream(event);
+        inOrder.verify(sseService).broadcast(eq(hashUrl), eq(mockHeatmapResponse));
+
         assertThat(captor.getValue()).hasSize(request.unavailableTimes().size());
     }
 
