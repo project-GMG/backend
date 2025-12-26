@@ -62,4 +62,8 @@ public class Participant {
         this.participantStatus = ParticipantStatus.COMPLETED;
         this.completedAt = LocalDateTime.now();
     }
+
+    public Long getEventId() {
+        return event.getId();
+    }
 }
