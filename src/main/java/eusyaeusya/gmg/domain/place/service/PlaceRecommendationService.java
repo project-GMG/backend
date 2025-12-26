@@ -1,0 +1,136 @@
+package eusyaeusya.gmg.domain.place.service;
+
+import eusyaeusya.gmg.domain.event.entity.Event;
+import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
+import eusyaeusya.gmg.domain.participant.repository.ParticipantDislikedCategoryRepository;
+import eusyaeusya.gmg.domain.place.entity.Place;
+import eusyaeusya.gmg.domain.place.repository.PlaceRepository;
+import eusyaeusya.gmg.domain.place.util.RecommendationScoreCalculator;
+import eusyaeusya.gmg.domain.place.vo.CategoryRecommendations;
+import eusyaeusya.gmg.domain.place.vo.PlaceRecommendation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class PlaceRecommendationService {
+
+    private static final int MAX_RECOMMENDATIONS_PER_PLACE_TYPE = 3;
+
+    private final EventRepository eventRepository;
+    private final PlaceRepository placeRepository;
+    private final ParticipantDislikedCategoryRepository dislikedCategoryRepository;
+
+    public List<CategoryRecommendations> generateRecommendations(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Event not found: " + eventId));
+
+        // 1. 모든 active한 장소 조회
+        List<Place> allPlaces = placeRepository.findAll().stream()
+                .filter(Place::getIsActive)
+                .toList();
+
+        // 2. 영업시간 필터링 - 최소 하루라도 영업하는 곳만
+        List<Place> operatingPlaces = filterByOperatingHours(allPlaces, event);
+
+        // 3. PlaceType별 비선호도 집계 (완료된 참여자만)
+        Map<Long, Integer> placeTypeDislikes = countPlaceTypeDislikes(eventId);
+
+        // 4. PlaceType별로 그룹핑하고 점수 계산
+        Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType =
+                groupAndScorePlaces(operatingPlaces, event, placeTypeDislikes);
+
+        // 5. PlaceType별 상위 3개씩 선택
+        return selectTopRecommendations(recommendationsByPlaceType);
+    }
+
+    private List<Place> filterByOperatingHours(List<Place> places, Event event) {
+        return places.stream()
+                .filter(place -> {
+                    int matchingDays = event.countDaysMatching(place::isOpenOn);
+                    return matchingDays > 0; // 최소 하루라도 영업해야 함
+                })
+                .toList();
+    }
+
+    private Map<Long, Integer> countPlaceTypeDislikes(Long eventId) {
+        // 완료된 참여자들의 카테고리 비선호를 PlaceType별로 집계
+        List<Object[]> results = dislikedCategoryRepository
+                .countDislikesByPlaceType(eventId, ParticipantStatus.COMPLETED);
+
+        Map<Long, Integer> dislikes = new HashMap<>();
+        for (Object[] result : results) {
+            Long placeTypeId = (Long) result[0];
+            Long count = (Long) result[1];
+            dislikes.put(placeTypeId, count.intValue());
+        }
+
+        return dislikes;
+    }
+
+    private Map<Long, List<PlaceRecommendation>> groupAndScorePlaces(
+            List<Place> places,
+            Event event,
+            Map<Long, Integer> placeTypeDislikes) {
+
+        int totalDays = event.getTotalDays();
+
+        return places.stream()
+                .map(place -> {
+                    Long placeTypeId = place.getPlaceType().getId();
+                    int dislikeCount = placeTypeDislikes.getOrDefault(placeTypeId, 0);
+                    int matchingDays = event.countDaysMatching(place::isOpenOn);
+                    double score = RecommendationScoreCalculator.calculateScore(
+                            place, event, dislikeCount
+                    );
+
+                    return new PlaceRecommendation(
+                            place.getId(),
+                            place.getName(),
+                            place.getPlaceType().getLabel(),
+                            score,
+                            matchingDays,
+                            totalDays
+                    );
+                })
+                .collect(Collectors.groupingBy(
+                        rec -> places.stream()
+                                .filter(p -> p.getName().equals(rec.placeName()))
+                                .findFirst()
+                                .orElseThrow()
+                                .getPlaceType()
+                                .getId()
+                ));
+    }
+
+    private List<CategoryRecommendations> selectTopRecommendations(
+            Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType) {
+
+        return recommendationsByPlaceType.values().stream()
+                .map(recommendations -> {
+
+                    // 점수 내림차순 정렬 후 상위 3개
+                    List<PlaceRecommendation> topRecommendations = recommendations.stream()
+                            .sorted(Comparator.comparingDouble(PlaceRecommendation::score).reversed())
+                            .limit(MAX_RECOMMENDATIONS_PER_PLACE_TYPE)
+                            .toList();
+
+                    // PlaceTypeName은 첫 번째 추천에서 가져옴
+                    String placeTypeName = topRecommendations.isEmpty()
+                            ? "Unknown"
+                            : topRecommendations.getFirst().placeTypeName();
+
+                    return new CategoryRecommendations(placeTypeName, topRecommendations);
+                })
+                .toList();
+    }
+}
