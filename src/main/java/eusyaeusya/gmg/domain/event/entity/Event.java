@@ -150,8 +150,26 @@ public class Event extends BaseTimeEntity {
         }
     }
 
+    public int getTotalDays() {
+        return (int) ChronoUnit.DAYS.between(dateStart, dateEnd) + 1;
+    }
+
     public boolean isClosed() {
         return status == EventStatus.CLOSED;
+    }
+
+    public int countDaysMatching(DateCondition condition) {
+        int count = 0;
+        LocalDate current = dateStart;
+
+        while (!current.isAfter(dateEnd)) {
+            if (condition.test(current, timeStart, timeEnd)) {
+                count++;
+            }
+            current = current.plusDays(1);
+        }
+
+        return count;
     }
 
     @Override
@@ -164,5 +182,10 @@ public class Event extends BaseTimeEntity {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    @FunctionalInterface
+    public interface DateCondition {
+        boolean test(LocalDate date, LocalTime timeStart, LocalTime timeEnd);
     }
 }
