@@ -1,5 +1,8 @@
 package eusyaeusya.gmg.domain.place.service;
 
+import eusyaeusya.gmg.api.event.response.EventErrorCode;
+import eusyaeusya.gmg.api.place.response.PlaceRecommendationResponse;
+import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
@@ -30,9 +33,8 @@ public class PlaceRecommendationService {
     private final PlaceRepository placeRepository;
     private final ParticipantDislikedCategoryRepository dislikedCategoryRepository;
 
-    public List<CategoryRecommendations> generateRecommendations(Long eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("Event not found: " + eventId));
+    public PlaceRecommendationResponse generateRecommendations(String hashUrl) {
+        Event event = getEvent(hashUrl);
 
         // 1. 모든 active한 장소 조회
         List<Place> allPlaces = placeRepository.findAll().stream()
@@ -43,14 +45,22 @@ public class PlaceRecommendationService {
         List<Place> operatingPlaces = filterByOperatingHours(allPlaces, event);
 
         // 3. PlaceType별 비선호도 집계 (완료된 참여자만)
-        Map<Long, Integer> placeTypeDislikes = countPlaceTypeDislikes(eventId);
+        Map<Long, Integer> placeTypeDislikes = countPlaceTypeDislikes(hashUrl);
 
         // 4. PlaceType별로 그룹핑하고 점수 계산
         Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType =
                 groupAndScorePlaces(operatingPlaces, event, placeTypeDislikes);
 
         // 5. PlaceType별 상위 3개씩 선택
-        return selectTopRecommendations(recommendationsByPlaceType);
+        return PlaceRecommendationResponse.from(selectTopRecommendations(recommendationsByPlaceType));
+    }
+
+    private Event getEvent(String hashUrl) {
+        return eventRepository.findByHashUrl(hashUrl)
+                .orElseThrow(() -> new NotFoundException(
+                        EventErrorCode.EVENT_NOT_FOUND,
+                        String.format("이벤트를 찾을 수 없습니다: %s", hashUrl)
+                ));
     }
 
     private List<Place> filterByOperatingHours(List<Place> places, Event event) {
@@ -62,10 +72,10 @@ public class PlaceRecommendationService {
                 .toList();
     }
 
-    private Map<Long, Integer> countPlaceTypeDislikes(Long eventId) {
+    private Map<Long, Integer> countPlaceTypeDislikes(String hashUrl) {
         // 완료된 참여자들의 카테고리 비선호를 PlaceType별로 집계
         List<Object[]> results = dislikedCategoryRepository
-                .countDislikesByPlaceType(eventId, ParticipantStatus.COMPLETED);
+                .countDislikesByPlaceType(hashUrl, ParticipantStatus.COMPLETED);
 
         Map<Long, Integer> dislikes = new HashMap<>();
         for (Object[] result : results) {

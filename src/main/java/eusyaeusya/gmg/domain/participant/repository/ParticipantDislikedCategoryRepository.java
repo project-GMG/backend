@@ -17,12 +17,12 @@ public interface ParticipantDislikedCategoryRepository extends JpaRepository<Par
     @Query("""
             SELECT pdc.category.placeType.id, COUNT(DISTINCT pdc.participant.id)
             FROM ParticipantDislikedCategory pdc
-            WHERE pdc.event.id = :eventId
+            WHERE pdc.event.hashUrl = :hashUrl
             AND pdc.participant.participantStatus = :status
             GROUP BY pdc.category.placeType.id
             """)
     List<Object[]> countDislikesByPlaceType(
-            @Param("eventId") Long eventId,
+            @Param("hashUrl") String hashUrl,
             @Param("status") ParticipantStatus status
     );
 }
