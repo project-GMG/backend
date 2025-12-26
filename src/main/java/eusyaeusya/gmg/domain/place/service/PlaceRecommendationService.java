@@ -33,8 +33,26 @@ public class PlaceRecommendationService {
     private final ParticipantDislikedCategoryRepository dislikedCategoryRepository;
 
     public List<CategoryRecommendations> generateRecommendations(String hashUrl) {
-        Event event = getEvent(hashUrl);
+        Event event = eventRepository.findByHashUrl(hashUrl)
+                .orElseThrow(() -> new NotFoundException(
+                        EventErrorCode.EVENT_NOT_FOUND,
+                        String.format("이벤트를 찾을 수 없습니다: %s", hashUrl)
+                ));
 
+        return generateRecommendations(event);
+    }
+
+    public List<CategoryRecommendations> generateRecommendations(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(
+                        EventErrorCode.EVENT_NOT_FOUND,
+                        String.format("이벤트를 찾을 수 없습니다: eventId=%d", eventId)
+                ));
+
+        return generateRecommendations(event);
+    }
+
+    private List<CategoryRecommendations> generateRecommendations(Event event) {
         // 1. 모든 active한 장소 조회
         List<Place> allPlaces = placeRepository.findAll().stream()
                 .filter(Place::getIsActive)
@@ -44,7 +62,7 @@ public class PlaceRecommendationService {
         List<Place> operatingPlaces = filterByOperatingHours(allPlaces, event);
 
         // 3. PlaceType별 비선호도 집계 (완료된 참여자만)
-        Map<Long, Integer> placeTypeDislikes = countPlaceTypeDislikes(hashUrl);
+        Map<Long, Integer> placeTypeDislikes = countPlaceTypeDislikes(event.getId());
 
         // 4. PlaceType별로 그룹핑하고 점수 계산
         Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType =
@@ -71,10 +89,10 @@ public class PlaceRecommendationService {
                 .toList();
     }
 
-    private Map<Long, Integer> countPlaceTypeDislikes(String hashUrl) {
+    private Map<Long, Integer> countPlaceTypeDislikes(Long eventId) {
         // 완료된 참여자들의 카테고리 비선호를 PlaceType별로 집계
         List<Object[]> results = dislikedCategoryRepository
-                .countDislikesByPlaceType(hashUrl, ParticipantStatus.COMPLETED);
+                .countDislikesByPlaceType(eventId, ParticipantStatus.COMPLETED);
 
         Map<Long, Integer> dislikes = new HashMap<>();
         for (Object[] result : results) {
@@ -141,5 +159,22 @@ public class PlaceRecommendationService {
                     return new CategoryRecommendations(placeTypeName, topRecommendations);
                 })
                 .toList();
+    }
+
+    public EventRecommendationResult generateRecommendationsWithEventId(String hashUrl) {
+        Event event = eventRepository.findByHashUrl(hashUrl)
+                .orElseThrow(() -> new NotFoundException(
+                        EventErrorCode.EVENT_NOT_FOUND,
+                        String.format("이벤트를 찾을 수 없습니다: %s", hashUrl)
+                ));
+
+        List<CategoryRecommendations> recommendations = generateRecommendations(event);
+        return new EventRecommendationResult(event.getId(), recommendations);
+    }
+
+    public record EventRecommendationResult(
+            Long eventId,
+            List<CategoryRecommendations> recommendations
+    ) {
     }
 }

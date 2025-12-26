@@ -1,5 +1,6 @@
 package eusyaeusya.gmg.domain.event.util;
 
+import eusyaeusya.gmg.api.place.response.PlaceRecommendationResponse;
 import eusyaeusya.gmg.config.sse.SseService;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
@@ -29,15 +30,17 @@ public class PlaceRecommendationEventListener {
         try {
             Event eventEntity = eventRepository.findById(eventId)
                     .orElseThrow(() -> new IllegalArgumentException("Event not found: " + eventId));
-            String hashUrl = eventEntity.getHashUrl();
 
             List<CategoryRecommendations> recommendations =
-                    recommendationService.generateRecommendations(hashUrl);
+                    recommendationService.generateRecommendations(eventId);
 
-            sseService.broadcast(hashUrl, "place-recommendations", recommendations);
+            PlaceRecommendationResponse response =
+                    PlaceRecommendationResponse.from(eventId, recommendations);
+
+            sseService.broadcast(eventEntity.getHashUrl(), "place-recommendations", response);
 
             log.info("추천 업데이트 완료: eventId={}, hashUrl={}, 카테고리 수={}",
-                    eventId, hashUrl, recommendations.size());
+                    eventId, eventEntity.getHashUrl(), response.recommendations().size());
         } catch (Exception e) {
             log.error("추천 업데이트 실패: eventId={}", eventId, e);
         }

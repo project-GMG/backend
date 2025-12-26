@@ -6,12 +6,9 @@ import eusyaeusya.gmg.api.place.response.PlaceSuccessCode;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
 import eusyaeusya.gmg.domain.place.service.PlaceRecommendationService;
 import eusyaeusya.gmg.domain.place.service.PlaceService;
-import eusyaeusya.gmg.domain.place.vo.CategoryRecommendations;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -47,10 +44,14 @@ public class PlaceController implements PlaceApiSpec {
     public ApiResponse<PlaceRecommendationResponse> getRecommendations(@PathVariable String hashUrl) {
         log.info("추천 장소 조회 요청: hashUrl={}", hashUrl);
 
-        List<CategoryRecommendations> recommendation = recommendationService.generateRecommendations(hashUrl);
-        PlaceRecommendationResponse response = PlaceRecommendationResponse.from(recommendation);
+        PlaceRecommendationService.EventRecommendationResult result =
+                recommendationService.generateRecommendationsWithEventId(hashUrl);
 
-        log.info("추천 장소 조회 완료: hashUrl={}, 카테고리 수={}", hashUrl, recommendation.size());
+        PlaceRecommendationResponse response =
+                PlaceRecommendationResponse.from(result.eventId(), result.recommendations());
+
+        log.info("추천 장소 조회 완료: hashUrl={}, eventId={}, 카테고리 수={}",
+                hashUrl, result.eventId(), result.recommendations().size());
 
         return ApiResponse.successWithData(PlaceSuccessCode.RECOMMENDATION_PLACE, response);
     }

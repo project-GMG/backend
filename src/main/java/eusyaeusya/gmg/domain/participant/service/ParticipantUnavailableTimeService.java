@@ -53,7 +53,7 @@ public class ParticipantUnavailableTimeService {
                 createUnavailableTimes(participantId, request, event, participant);
 
         EventHeatmapStreamResponse heatmapData = heatmapService.calculateHeatmapForStream(event);
-        sseService.broadcast(hashUrl, heatmapData);
+        sseService.broadcast(hashUrl, "heatmap-update", heatmapData);
 
         return ParticipantUnavailableTimeResponse.of(participantId, unavailableTimes.size());
     }

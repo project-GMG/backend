@@ -6,13 +6,14 @@ import eusyaeusya.gmg.domain.place.vo.PlaceRecommendation;
 import java.util.List;
 
 public record PlaceRecommendationResponse(
+        Long eventId,
         List<CategoryRecommendation> recommendations
 ) {
-    public static PlaceRecommendationResponse from(List<CategoryRecommendations> categoryRecommendations) {
+    public static PlaceRecommendationResponse from(Long eventId, List<CategoryRecommendations> categoryRecommendations) {
         List<CategoryRecommendation> recommendations = categoryRecommendations.stream()
                 .map(CategoryRecommendation::from)
                 .toList();
-        return new PlaceRecommendationResponse(recommendations);
+        return new PlaceRecommendationResponse(eventId, recommendations);
     }
 
     public record CategoryRecommendation(
