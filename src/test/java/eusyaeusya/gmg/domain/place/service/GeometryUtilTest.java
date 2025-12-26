@@ -1,5 +1,6 @@
 package eusyaeusya.gmg.domain.place.service;
 
+import eusyaeusya.gmg.domain.place.util.GeometryUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

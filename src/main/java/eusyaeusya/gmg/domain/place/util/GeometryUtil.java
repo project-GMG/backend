@@ -1,4 +1,4 @@
-package eusyaeusya.gmg.domain.place.service;
+package eusyaeusya.gmg.domain.place.util;
 
 public class GeometryUtil {
 

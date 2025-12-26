@@ -13,6 +13,7 @@ import eusyaeusya.gmg.domain.place.entity.PlaceCategory;
 import eusyaeusya.gmg.domain.place.repository.PlaceCategoryRepository;
 import eusyaeusya.gmg.domain.place.repository.PlaceRepository;
 import eusyaeusya.gmg.domain.place.repository.PlaceSimpleProjection;
+import eusyaeusya.gmg.domain.place.util.GeometryUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
