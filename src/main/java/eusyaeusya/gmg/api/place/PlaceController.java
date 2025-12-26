@@ -1,8 +1,10 @@
 package eusyaeusya.gmg.api.place;
 
 import eusyaeusya.gmg.api.place.response.PlaceListResponse;
+import eusyaeusya.gmg.api.place.response.PlaceRecommendationResponse;
 import eusyaeusya.gmg.api.place.response.PlaceSuccessCode;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
+import eusyaeusya.gmg.domain.place.service.PlaceRecommendationService;
 import eusyaeusya.gmg.domain.place.service.PlaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PlaceController implements PlaceApiSpec {
     private final PlaceService placeService;
+    private final PlaceRecommendationService recommendationService;
 
     @Override
     @GetMapping
@@ -34,5 +37,17 @@ public class PlaceController implements PlaceApiSpec {
                 PlaceSuccessCode.PLACES_RETRIEVED,
                 response
         );
+    }
+
+    @Override
+    @GetMapping("/recommendations")
+    public ApiResponse<PlaceRecommendationResponse> getRecommendations(@PathVariable String hashUrl) {
+        log.info("추천 장소 조회 요청: hashUrl={}", hashUrl);
+
+        PlaceRecommendationResponse response = recommendationService.generateRecommendations(hashUrl);
+
+        log.info("추천 장소 조회 완료: hashUrl={}, 카테고리 수={}", hashUrl, response.recommendations().size());
+
+        return ApiResponse.successWithData(PlaceSuccessCode.RECOMMENDATION_PLACE, response);
     }
 }
