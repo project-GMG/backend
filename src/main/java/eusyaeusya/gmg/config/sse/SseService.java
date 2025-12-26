@@ -1,7 +1,6 @@
 package eusyaeusya.gmg.config.sse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eusyaeusya.gmg.api.event.response.EventHeatmapStreamResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -65,15 +64,16 @@ public class SseService {
         return emitter;
     }
 
-    public void broadcast(String hashUrl, EventHeatmapStreamResponse heatmapData) {
+    public <T> void broadcast(String hashUrl, String eventName, T data) {
         CopyOnWriteArrayList<SseEmitter> emitters = emittersByEvent.get(hashUrl);
 
         if (emitters == null || emitters.isEmpty()) {
-            log.debug("브로드캐스트 대상 없음: hashUrl={}", hashUrl);
+            log.debug("브로드캐스트 대상 없음: hashUrl={}, eventName={}", hashUrl, eventName);
             return;
         }
 
-        log.info("히트맵 브로드캐스트 시작: hashUrl={}, 구독자 수={}", hashUrl, emitters.size());
+        log.info("브로드캐스트 시작: hashUrl={}, eventName={}, 구독자 수={}",
+                hashUrl, eventName, emitters.size());
 
         int successCount = 0;
         int failCount = 0;
@@ -81,21 +81,25 @@ public class SseService {
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("heatmap-update")
-                        .data(heatmapData));
+                        .name(eventName)
+                        .data(data));
                 successCount++;
             } catch (IOException e) {
-                log.warn("SSE 전송 실패: hashUrl={}", hashUrl, e);
+                log.warn("SSE 전송 실패: hashUrl={}, eventName={}", hashUrl, eventName, e);
                 emitters.remove(emitter);
                 emitter.completeWithError(e);
                 failCount++;
             }
         }
 
-        log.info("히트맵 브로드캐스트 완료: hashUrl={}, 성공={}, 실패={}",
-                hashUrl, successCount, failCount);
+        log.info("브로드캐스트 완료: hashUrl={}, eventName={}, 성공={}, 실패={}",
+                hashUrl, eventName, successCount, failCount);
 
         cleanupEmptyList(hashUrl);
+    }
+
+    public void broadcast(String hashUrl, Object heatmapData) {
+        broadcast(hashUrl, "heatmap-update", heatmapData);
     }
 
     private void cleanupEmptyList(String hashUrl) {
