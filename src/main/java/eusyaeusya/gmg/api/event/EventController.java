@@ -60,9 +60,9 @@ public class EventController implements EventApiSpec {
     }
 
 
-    @GetMapping(value = "/{hashUrl}/heatmap/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/{hashUrl}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamHeatmap(@PathVariable String hashUrl) {
-        log.info("GET /events/{}/heatmap/stream - SSE 구독 시작", hashUrl);
+        log.info("GET /events/{}/heatmap/stream - SSE 구독 시작 (히트맵 + 추천)", hashUrl);
 
         return sseService.subscribe(hashUrl);
     }

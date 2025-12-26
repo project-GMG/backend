@@ -1,6 +1,7 @@
 package eusyaeusya.gmg.domain.place.entity;
 
 import eusyaeusya.gmg.common.audit.entity.BaseTimeEntity;
+import eusyaeusya.gmg.domain.place.util.OpeningHours;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,6 +9,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "places",
@@ -51,7 +55,7 @@ public class Place extends BaseTimeEntity {
     @Column(precision = 2, scale = 1, nullable = false)
     private BigDecimal rating;
 
-    @Column(name = "open_hours_json", columnDefinition = "TEXT")
+    @Column(name = "open_hours_json", columnDefinition = "JSON")
     private String openHoursJson;
 
     @Column(name = "is_active", nullable = false)
@@ -105,11 +109,15 @@ public class Place extends BaseTimeEntity {
                 .build();
     }
 
-    public void deactivate() {
-        this.isActive = false;
+    public OpeningHours getOpeningHours() {
+        return new OpeningHours(openHoursJson);
     }
 
-    public void activate() {
-        this.isActive = true;
+    public boolean isOpenOn(LocalDate date, LocalTime startTime, LocalTime endTime) {
+        if (openHoursJson == null || openHoursJson.isEmpty()) {
+            return false;
+        }
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return getOpeningHours().isOpenDuring(dayOfWeek, startTime, endTime);
     }
 }

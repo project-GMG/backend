@@ -9,6 +9,7 @@ import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.event.util.PlaceRecommendationEventPublisher;
 import eusyaeusya.gmg.domain.participant.entity.Participant;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
@@ -39,6 +40,9 @@ class ParticipantServiceTest {
 
     @Mock
     private ParticipantRepository participantRepository;
+
+    @Mock
+    private PlaceRecommendationEventPublisher recommendationEventPublisher;
 
     @Test
     @DisplayName("참여자 이름 등록 성공")

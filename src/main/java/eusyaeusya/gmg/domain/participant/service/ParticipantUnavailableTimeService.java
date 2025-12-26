@@ -40,7 +40,7 @@ public class ParticipantUnavailableTimeService {
             Long participantId,
             ParticipantUnavailableTimeRequest request
     ) {
-        Event event = getEvent(hashUrl); //TODO: 동시성 제어 필요함
+        Event event = getEventWithLock(hashUrl);
         validateEventStatus(hashUrl, event);
 
         Participant participant = getParticipant(participantId);
@@ -53,7 +53,7 @@ public class ParticipantUnavailableTimeService {
                 createUnavailableTimes(participantId, request, event, participant);
 
         EventHeatmapStreamResponse heatmapData = heatmapService.calculateHeatmapForStream(event);
-        sseService.broadcast(hashUrl, heatmapData);
+        sseService.broadcast(hashUrl, "heatmap-update", heatmapData);
 
         return ParticipantUnavailableTimeResponse.of(participantId, unavailableTimes.size());
     }
@@ -66,13 +66,13 @@ public class ParticipantUnavailableTimeService {
                 ));
     }
 
-    /*private Event getEventWithLock(String hashUrl) {
+    private Event getEventWithLock(String hashUrl) {
         return eventRepository.findByHashUrlWithLock(hashUrl)
                 .orElseThrow(() -> new NotFoundException(
                         EventErrorCode.EVENT_NOT_FOUND,
                         String.format(EventErrorCode.EVENT_NOT_FOUND.getMessage(), ": %s", hashUrl)
                 ));
-    }*/
+    }
 
     private void validateEventStatus(String hashUrl, Event event) {
         if (event.isClosed()) {

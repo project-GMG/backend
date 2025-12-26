@@ -1,6 +1,7 @@
 package eusyaeusya.gmg.api.place;
 
 import eusyaeusya.gmg.api.place.response.PlaceListResponse;
+import eusyaeusya.gmg.api.place.response.PlaceRecommendationResponse;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,5 +32,18 @@ public interface PlaceApiSpec {
 
             @Parameter(description = "페이지 크기", example = "16")
             @RequestParam(defaultValue = "16") int size
+    );
+
+    @Operation(
+            summary = "이벤트의 추천 장소 조회",
+            description = """
+                    완료된 참여자들의 선호도를 기반으로 추천 장소 목록을 반환합니다.
+                    PlaceType별로 최대 3개씩 추천됩니다.
+                    """
+    )
+    @GetMapping("/recommendations")
+    ApiResponse<PlaceRecommendationResponse> getRecommendations(
+            @Parameter(description = "이벤트 해시 URL", example = "abc123")
+            @PathVariable String hashUrl
     );
 }

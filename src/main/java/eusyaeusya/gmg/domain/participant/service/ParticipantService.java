@@ -9,6 +9,7 @@ import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.event.util.PlaceRecommendationEventPublisher;
 import eusyaeusya.gmg.domain.participant.entity.Participant;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class ParticipantService {
 
     private final ParticipantRepository participantRepository;
     private final EventRepository eventRepository;
+    private final PlaceRecommendationEventPublisher recommendationEventPublisher;
 
     @Transactional
     public ParticipantNameJoinResponse joinEvent(String hashUrl, ParticipantNameJoinRequest request) {
@@ -49,6 +51,11 @@ public class ParticipantService {
         validateParticipantBelongsToEvent(participant, event);
 
         participant.complete();
+        participantRepository.save(participant);
+
+        // 완료 시점에 추천 업데이트 이벤트 발행
+        Long eventId = participant.getEventId();
+        recommendationEventPublisher.publishUpdate(eventId);
 
         log.info("참여자 정보 입력 완료: eventId={}, participantId={}, name={}, status={}",
                 event.getId(), participant.getId(), participant.getName(), participant.getParticipantStatus());

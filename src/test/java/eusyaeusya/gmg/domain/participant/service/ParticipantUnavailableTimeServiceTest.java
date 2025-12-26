@@ -31,7 +31,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
@@ -64,15 +63,15 @@ class ParticipantUnavailableTimeServiceTest {
         Long participantId = 1L;
 
         Event event = mockOpenEvent();
-        given(eventRepository.findByHashUrl(hashUrl)).willReturn(Optional.of(event));
+
+        given(eventRepository.findByHashUrlWithLock(hashUrl)).willReturn(Optional.of(event));
 
         Participant participant = mock(Participant.class);
         given(participant.isNotBelongsToEvent(event)).willReturn(false);
         given(participantRepository.findById(participantId)).willReturn(Optional.of(participant));
 
-        ParticipantUnavailableTimeRequest request = createValidRequest(event);
+        ParticipantUnavailableTimeRequest request = createValidRequest(LocalDate.now());
 
-        // HeatmapService와 SseService Mock 설정
         EventHeatmapStreamResponse mockHeatmapResponse = mock(EventHeatmapStreamResponse.class);
         given(heatmapService.calculateHeatmapForStream(event)).willReturn(mockHeatmapResponse);
 
@@ -90,9 +89,8 @@ class ParticipantUnavailableTimeServiceTest {
         then(unavailableTimeRepository).should().saveAll(captor.capture());
         assertThat(captor.getValue()).hasSize(request.unavailableTimes().size());
 
-        // 히트맵 계산 및 SSE 브로드캐스트 검증
         then(heatmapService).should(times(1)).calculateHeatmapForStream(event);
-        then(sseService).should(times(1)).broadcast(eq(hashUrl), eq(mockHeatmapResponse));
+        then(sseService).should(times(1)).broadcast(eq(hashUrl), eq("heatmap-update"), eq(mockHeatmapResponse));
     }
 
     @Test
@@ -101,7 +99,8 @@ class ParticipantUnavailableTimeServiceTest {
         // given
         String hashUrl = "not-exist";
         Long participantId = 1L;
-        given(eventRepository.findByHashUrl(hashUrl)).willReturn(Optional.empty());
+
+        given(eventRepository.findByHashUrlWithLock(hashUrl)).willReturn(Optional.empty());
 
         ParticipantUnavailableTimeRequest request = new ParticipantUnavailableTimeRequest(
                 List.of(new ParticipantUnavailableTimeRequest.UnavailableTimeSlot(
@@ -127,7 +126,7 @@ class ParticipantUnavailableTimeServiceTest {
         String hashUrl = "closed";
         Long participantId = 1L;
         Event closedEvent = mockClosedEvent();
-        given(eventRepository.findByHashUrl(hashUrl)).willReturn(Optional.of(closedEvent));
+        given(eventRepository.findByHashUrlWithLock(hashUrl)).willReturn(Optional.of(closedEvent));
 
         ParticipantUnavailableTimeRequest request = new ParticipantUnavailableTimeRequest(
                 List.of(new ParticipantUnavailableTimeRequest.UnavailableTimeSlot(
@@ -153,8 +152,9 @@ class ParticipantUnavailableTimeServiceTest {
         String hashUrl = "hash123";
         Long participantId = 99L;
 
-        Event event = mock(Event.class);
-        given(eventRepository.findByHashUrl(hashUrl)).willReturn(Optional.of(event));
+        Event event = mockOpenEvent();
+
+        given(eventRepository.findByHashUrlWithLock(hashUrl)).willReturn(Optional.of(event));
         given(participantRepository.findById(participantId)).willReturn(Optional.empty());
 
         ParticipantUnavailableTimeRequest request = new ParticipantUnavailableTimeRequest(
@@ -179,21 +179,21 @@ class ParticipantUnavailableTimeServiceTest {
         // given
         String hashUrl = "hashA";
         Long participantId = 1L;
-        Event eventA = mock(Event.class); // 최소 스텁: isClosed 기본값 false
-        given(eventRepository.findByHashUrl(hashUrl)).willReturn(Optional.of(eventA));
+        Event eventA = mockOpenEvent();
+
+        given(eventRepository.findByHashUrlWithLock(hashUrl)).willReturn(Optional.of(eventA));
 
         Participant participant = mock(Participant.class);
         given(participantRepository.findById(participantId)).willReturn(Optional.of(participant));
         given(participant.isNotBelongsToEvent(eventA)).willReturn(true);
 
-        // 이벤트 정보에 의존하지 않는 단순 요청 (참여자-이벤트 검증에서 예외 발생 예정)
         ParticipantUnavailableTimeRequest request = new ParticipantUnavailableTimeRequest(
                 List.of(new ParticipantUnavailableTimeRequest.UnavailableTimeSlot(
                         LocalDate.now(), LocalTime.of(10, 0), LocalTime.of(11, 0)
                 ))
         );
 
-        // when // then (오류 코드 검증)
+        // when // then
         assertThatThrownBy(() -> unavailableTimeService.registerUnavailableTimes(hashUrl, participantId, request))
                 .isInstanceOf(BadRequestException.class)
                 .satisfies(ex -> assertThat(((BadRequestException) ex).getErrorCode())
@@ -213,15 +213,15 @@ class ParticipantUnavailableTimeServiceTest {
         Long participantId = 1L;
 
         Event event = mockOpenEvent();
-        given(eventRepository.findByHashUrl(hashUrl)).willReturn(Optional.of(event));
+
+        given(eventRepository.findByHashUrlWithLock(hashUrl)).willReturn(Optional.of(event));
 
         Participant participant = mock(Participant.class);
         given(participant.isNotBelongsToEvent(event)).willReturn(false);
         given(participantRepository.findById(participantId)).willReturn(Optional.of(participant));
 
-        ParticipantUnavailableTimeRequest request = createValidRequest(event);
+        ParticipantUnavailableTimeRequest request = createValidRequest(LocalDate.now());
 
-        // HeatmapService와 SseService Mock 설정
         EventHeatmapStreamResponse mockHeatmapResponse = mock(EventHeatmapStreamResponse.class);
         given(heatmapService.calculateHeatmapForStream(event)).willReturn(mockHeatmapResponse);
 
@@ -237,34 +237,34 @@ class ParticipantUnavailableTimeServiceTest {
 
         ArgumentCaptor<List<ParticipantUnavailableTime>> captor = ArgumentCaptor.forClass(List.class);
 
-        // 순서 검증: 삭제 → 저장 → 히트맵 계산 → SSE 브로드캐스트
         inOrder.verify(unavailableTimeRepository).deleteAllByParticipantId(participantId);
         inOrder.verify(unavailableTimeRepository).saveAll(captor.capture());
         inOrder.verify(heatmapService).calculateHeatmapForStream(event);
-        inOrder.verify(sseService).broadcast(eq(hashUrl), eq(mockHeatmapResponse));
+        inOrder.verify(sseService).broadcast(eq(hashUrl), eq("heatmap-update"), eq(mockHeatmapResponse));
 
         assertThat(captor.getValue()).hasSize(request.unavailableTimes().size());
     }
 
     private Event mockOpenEvent() {
         Event event = mock(Event.class);
-        LocalDate today = LocalDate.now();
-        given(event.isClosed()).willReturn(false);
-        given(event.getDateStart()).willReturn(today);
-        given(event.getDateEnd()).willReturn(today);
-        given(event.getTimeStart()).willReturn(LocalTime.of(9, 0));
-        given(event.getTimeEnd()).willReturn(LocalTime.of(21, 0));
+        lenient().when(event.isClosed()).thenReturn(false);
+
+        lenient().when(event.getDateStart()).thenReturn(LocalDate.now().minusDays(1));
+        lenient().when(event.getDateEnd()).thenReturn(LocalDate.now().plusDays(7));
+        lenient().when(event.getTimeStart()).thenReturn(LocalTime.MIN);
+        lenient().when(event.getTimeEnd()).thenReturn(LocalTime.MAX);
+
         return event;
     }
 
     private Event mockClosedEvent() {
         Event event = mock(Event.class);
         given(event.isClosed()).willReturn(true);
+
         return event;
     }
 
-    private ParticipantUnavailableTimeRequest createValidRequest(Event event) {
-        LocalDate date = event.getDateStart();
+    private ParticipantUnavailableTimeRequest createValidRequest(LocalDate date) {
         return new ParticipantUnavailableTimeRequest(
                 List.of(
                         new ParticipantUnavailableTimeRequest.UnavailableTimeSlot(
@@ -276,5 +276,4 @@ class ParticipantUnavailableTimeServiceTest {
                 )
         );
     }
-
 }
