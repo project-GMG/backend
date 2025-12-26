@@ -1,7 +1,6 @@
 package eusyaeusya.gmg.domain.place.service;
 
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
-import eusyaeusya.gmg.api.place.response.PlaceRecommendationResponse;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
@@ -33,7 +32,7 @@ public class PlaceRecommendationService {
     private final PlaceRepository placeRepository;
     private final ParticipantDislikedCategoryRepository dislikedCategoryRepository;
 
-    public PlaceRecommendationResponse generateRecommendations(String hashUrl) {
+    public List<CategoryRecommendations> generateRecommendations(String hashUrl) {
         Event event = getEvent(hashUrl);
 
         // 1. 모든 active한 장소 조회
@@ -52,7 +51,7 @@ public class PlaceRecommendationService {
                 groupAndScorePlaces(operatingPlaces, event, placeTypeDislikes);
 
         // 5. PlaceType별 상위 3개씩 선택
-        return PlaceRecommendationResponse.from(selectTopRecommendations(recommendationsByPlaceType));
+        return selectTopRecommendations(recommendationsByPlaceType);
     }
 
     private Event getEvent(String hashUrl) {

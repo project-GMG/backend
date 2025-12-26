@@ -32,7 +32,7 @@ public class PlaceRecommendationEventListener {
             String hashUrl = eventEntity.getHashUrl();
 
             List<CategoryRecommendations> recommendations =
-                    recommendationService.generateRecommendations(eventId);
+                    recommendationService.generateRecommendations(hashUrl);
 
             sseService.broadcast(hashUrl, "place-recommendations", recommendations);
 
