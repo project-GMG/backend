@@ -19,7 +19,8 @@ import java.time.LocalTime;
                 @Index(name = "idx_location", columnList = "latitude, longitude"),
                 @Index(name = "idx_place_type", columnList = "place_type_id"),
                 @Index(name = "idx_category_id", columnList = "category_id"),
-                @Index(name = "idx_is_active", columnList = "is_active")
+                @Index(name = "idx_is_active", columnList = "is_active"),
+                @Index(name = "idx_place_kakao_id", columnList = "kakao_place_id")
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,6 +29,12 @@ public class Place extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "kakao_place_id", unique = true, length = 50)
+    private String kakaoPlaceId;
+
+    @Column(length = 20)
+    private String provider;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -63,6 +70,8 @@ public class Place extends BaseTimeEntity {
 
     @Builder
     private Place(
+            String kakaoPlaceId,
+            String provider,
             String name,
             PlaceType placeType,
             PlaceCategory category,
@@ -73,6 +82,8 @@ public class Place extends BaseTimeEntity {
             BigDecimal rating,
             String openHoursJson
     ) {
+        this.kakaoPlaceId = kakaoPlaceId;
+        this.provider = provider;
         this.name = name;
         this.placeType = placeType;
         this.category = category;
