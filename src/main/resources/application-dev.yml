@@ -18,6 +18,11 @@ spring:
     clean-disabled: true #clean 명령 금지
     validate-on-migrate: true
 
+kakao:
+  map:
+    api:
+      key: ${KAKAO_MAP_API_KEY}
+
 management:
   endpoints:
     web:
