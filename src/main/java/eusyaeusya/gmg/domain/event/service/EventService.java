@@ -11,11 +11,11 @@ import eusyaeusya.gmg.domain.event.repository.EventPlaceTypeRepository;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
-import eusyaeusya.gmg.domain.place.service.PlaceSearchOrchestrator;
 import eusyaeusya.gmg.domain.place.service.PlaceTypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +33,7 @@ public class EventService {
     private final PlaceTypeService placeTypeService;
     private final ParticipantRepository participantRepository;
     private final HeatmapService heatmapService;
-    private final PlaceSearchOrchestrator placeSearchOrchestrator;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public EventCreateResponse createEvent(final EventCreateRequest request) {
@@ -54,7 +54,7 @@ public class EventService {
 
         saveEventPlaceTypes(placeTypes, savedEvent);
 
-        placeSearchOrchestrator.fetchAndSaveAsync(savedEvent.getId());
+        eventPublisher.publishEvent(new PlaceSearchEvent(savedEvent.getId()));
 
         return EventCreateResponse.from(savedEvent);
     }

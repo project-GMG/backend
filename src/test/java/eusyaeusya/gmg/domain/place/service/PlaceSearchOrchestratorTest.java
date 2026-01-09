@@ -25,7 +25,7 @@ class PlaceSearchOrchestratorTest {
         Long eventId = 1L;
 
         // when
-        placeSearchOrchestrator.fetchAndSaveAsync(eventId);
+        placeSearchOrchestrator.fetchAndSave(eventId);
 
         // then
         verify(transactionService).fetchAndSavePlaces(eventId);
@@ -41,7 +41,7 @@ class PlaceSearchOrchestratorTest {
                 .when(transactionService).fetchAndSavePlaces(eventId);
 
         // when
-        placeSearchOrchestrator.fetchAndSaveAsync(eventId);
+        placeSearchOrchestrator.fetchAndSave(eventId);
 
         // then
         verify(transactionService).fetchAndSavePlaces(eventId);

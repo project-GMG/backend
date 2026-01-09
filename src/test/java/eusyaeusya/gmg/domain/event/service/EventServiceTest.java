@@ -13,7 +13,6 @@ import eusyaeusya.gmg.domain.event.repository.EventPlaceTypeRepository;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
-import eusyaeusya.gmg.domain.place.service.PlaceSearchOrchestrator;
 import eusyaeusya.gmg.domain.place.service.PlaceTypeService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -57,7 +57,7 @@ class EventServiceTest {
     private HeatmapService heatmapService;
 
     @Mock
-    private PlaceSearchOrchestrator placeSearchOrchestrator;
+    private ApplicationEventPublisher eventPublisher;
 
     @Test
     @DisplayName("Event 정상 생성 테스트")
@@ -73,7 +73,7 @@ class EventServiceTest {
                 .willReturn(mockSavedEvent);
         given(eventPlaceTypeRepository.saveAll(any()))
                 .willReturn(List.of());
-        doNothing().when(placeSearchOrchestrator).fetchAndSaveAsync(anyLong());
+
         // when
         EventCreateResponse response = eventService.createEvent(request);
 
@@ -87,7 +87,7 @@ class EventServiceTest {
         then(placeTypeService).should(times(1)).findByCodes(request.placeTypeCodes());
         then(eventRepository).should(times(1)).save(any(Event.class));
         then(eventPlaceTypeRepository).should(times(1)).saveAll(any());
-        then(placeSearchOrchestrator).should(times(1)).fetchAndSaveAsync(anyLong());
+        then(eventPublisher).should(times(1)).publishEvent(any(PlaceSearchEvent.class));
     }
 
     @Test
