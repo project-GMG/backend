@@ -2,7 +2,6 @@ package eusyaeusya.gmg.domain.place.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -12,8 +11,7 @@ public class PlaceSearchOrchestrator {
 
     private final PlaceSearchTransactionService transactionService;
 
-    @Async("placeSearchExecutor")
-    public void fetchAndSaveAsync(Long eventId) {
+    public void fetchAndSave(Long eventId) {
         log.info("비동기 장소 검색 시작: eventId={}, thread={}", eventId, Thread.currentThread().getName());
 
         try {
