@@ -29,6 +29,7 @@ import java.util.Objects;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Event extends BaseTimeEntity {
 
+    public static final int EXPIRATION_DAYS = 7;
     private static final int MAX_DATE_RANGE_DAYS = 35;
 
     @Id
@@ -196,6 +197,20 @@ public class Event extends BaseTimeEntity {
 
     public void failPlaceSearch() {
         this.placeSearchStatus = PlaceSearchStatus.FAILED;
+    }
+
+    public boolean isExpired() {
+        if (status == EventStatus.EXPIRED) {
+            return true;
+        }
+        if (createdAt == null) {
+            return false;
+        }
+        return createdAt.plusDays(EXPIRATION_DAYS).isBefore(java.time.LocalDateTime.now());
+    }
+
+    public void expire() {
+        this.status = EventStatus.EXPIRED;
     }
 
     @FunctionalInterface

@@ -222,6 +222,23 @@ class EventServiceTest {
     }
 
     @Test
+    @DisplayName("만료된 이벤트 - 예외 발생")
+    void fail_getEventMain_eventExpired() {
+        // given
+        String hashUrl = "expired123";
+        Event mockEvent = mock(Event.class);
+        given(mockEvent.isExpired()).willReturn(true);
+
+        given(eventRepository.findByHashUrl(hashUrl))
+                .willReturn(Optional.of(mockEvent));
+
+        // when & then
+        assertThatThrownBy(() -> eventService.getEventMain(hashUrl))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("만료된 이벤트입니다");
+    }
+
+    @Test
     @DisplayName("선택된 장소 타입이 없어도 조회 성공")
     void success_getEventMain_noPlaceTypes() {
         // given
@@ -323,7 +340,7 @@ class EventServiceTest {
     }
 
     private Event createMockEvent(String hashUrl) {
-        Event event = mock(Event.class);
+        Event event = mock(Event.class, withSettings().lenient());
 
         LocalDate dateStart = LocalDate.parse("2025-11-24");
         LocalDate dateEnd = LocalDate.parse("2025-11-25");
@@ -352,7 +369,7 @@ class EventServiceTest {
     }
 
     private Event createMockEvent() {
-        Event mockEvent = mock(Event.class);
+        Event mockEvent = mock(Event.class, withSettings().lenient());
         given(mockEvent.getId()).willReturn(1L);
         given(mockEvent.getHashUrl()).willReturn("abc123def");
         given(mockEvent.getCreatedAt()).willReturn(java.time.LocalDateTime.now());

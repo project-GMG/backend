@@ -4,6 +4,7 @@ import eusyaeusya.gmg.api.event.request.EventCreateRequest;
 import eusyaeusya.gmg.api.event.response.EventCreateResponse;
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
 import eusyaeusya.gmg.api.event.response.EventMainResponse;
+import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.entity.EventPlaceType;
@@ -92,24 +93,32 @@ public class EventService {
     }
 
     private Event getEvent(String hashUrl) {
-        return eventRepository.findByHashUrl(hashUrl)
+        Event event = eventRepository.findByHashUrl(hashUrl)
                 .orElseThrow(() -> new NotFoundException(
                         EventErrorCode.EVENT_NOT_FOUND,
                         String.format("이벤트를 찾을 수 없습니다: %s", hashUrl)
                 ));
+
+        if (event.isExpired()) {
+            throw new BadRequestException(
+                    EventErrorCode.EVENT_EXPIRED,
+                    String.format("만료된 이벤트입니다: %s", hashUrl)
+            );
+        }
+
+        return event;
     }
 
     private @NonNull List<EventMainResponse.PlaceTypeInfo> getPlaceTypeInfos(Event event) {
         List<EventPlaceType> eventPlaceTypes = eventPlaceTypeRepository.findByEventWithPlaceType(event);
 
-        List<EventMainResponse.PlaceTypeInfo> placeTypes = eventPlaceTypes.stream()
+        return eventPlaceTypes.stream()
                 .map(ept -> EventMainResponse.PlaceTypeInfo.builder()
                         .id(ept.getPlaceType().getId())
                         .code(ept.getPlaceType().getCode())
                         .label(ept.getPlaceType().getLabel())
                         .build())
                 .collect(Collectors.toList());
-        return placeTypes;
     }
 
     private EventMainResponse buildEventMainResponse(Event event, List<EventMainResponse.PlaceTypeInfo> placeTypes, int participantCount, List<EventMainResponse.HeatmapSlot> heatmapData) {
