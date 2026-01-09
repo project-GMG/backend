@@ -6,3 +6,9 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
     locations: classpath:db/migration
+
+kakao:
+  map:
+    api:
+      base-url: https://dapi.kakao.com
+      category-group-code: FD6,CE7

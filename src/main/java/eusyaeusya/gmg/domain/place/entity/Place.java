@@ -2,6 +2,7 @@ package eusyaeusya.gmg.domain.place.entity;
 
 import eusyaeusya.gmg.common.audit.entity.BaseTimeEntity;
 import eusyaeusya.gmg.domain.place.util.OpeningHours;
+import eusyaeusya.gmg.infra.kakao.dto.KakaoPlaceDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,7 +20,8 @@ import java.time.LocalTime;
                 @Index(name = "idx_location", columnList = "latitude, longitude"),
                 @Index(name = "idx_place_type", columnList = "place_type_id"),
                 @Index(name = "idx_category_id", columnList = "category_id"),
-                @Index(name = "idx_is_active", columnList = "is_active")
+                @Index(name = "idx_is_active", columnList = "is_active"),
+                @Index(name = "idx_place_external_id", columnList = "place_external_id")
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,6 +30,12 @@ public class Place extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "place_external_id", unique = true, length = 50)
+    private String placeExternalId;
+
+    @Column(length = 20)
+    private String provider;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -63,6 +71,8 @@ public class Place extends BaseTimeEntity {
 
     @Builder
     private Place(
+            String placeExternalId,
+            String provider,
             String name,
             PlaceType placeType,
             PlaceCategory category,
@@ -73,6 +83,8 @@ public class Place extends BaseTimeEntity {
             BigDecimal rating,
             String openHoursJson
     ) {
+        this.placeExternalId = placeExternalId;
+        this.provider = provider;
         this.name = name;
         this.placeType = placeType;
         this.category = category;
@@ -106,6 +118,26 @@ public class Place extends BaseTimeEntity {
                 .imageUrl(imageUrl)
                 .rating(rating)
                 .openHoursJson(openHoursJson)
+                .build();
+    }
+
+    public static Place fromKakao(
+            KakaoPlaceDto dto,
+            PlaceType placeType,
+            PlaceCategory category
+    ) {
+        return Place.builder()
+                .placeExternalId(dto.id())
+                .provider("KAKAO")
+                .name(dto.placeName())
+                .placeType(placeType)
+                .category(category)
+                .latitude(new BigDecimal(dto.y()))  // 카카오는 y가 위도
+                .longitude(new BigDecimal(dto.x())) // x가 경도
+                .address(dto.addressName())
+                .imageUrl(null) // 카카오맵 API에는 이미지 URL 없음
+                .rating(BigDecimal.ZERO) // 초기값
+                .openHoursJson(null) // 카카오맵 기본 API에는 영업시간 없음
                 .build();
     }
 

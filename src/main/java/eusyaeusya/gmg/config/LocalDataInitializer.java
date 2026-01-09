@@ -73,49 +73,51 @@ public class LocalDataInitializer implements ApplicationRunner {
         PlaceType bar = placeTypeRepository.findByCodeIn(List.of("BAR")).getFirst();
         PlaceType study = placeTypeRepository.findByCodeIn(List.of("STUDY")).getFirst();
 
-        // 식당 카테고리
-        Map<String, String> restaurantCategories = Map.of(
-                "한식", "KOREAN_FOOD",
-                "중식", "CHINESE_FOOD",
-                "일식", "JAPANESE_FOOD",
-                "양식", "WESTERN_FOOD",
-                "분식·야식", "SNACK_FOOD"
+        // 식당 카테고리 (9개)
+        List<Map.Entry<String, String>> restaurantCategories = List.of(
+                Map.entry("한식", "KOREAN_FOOD"),
+                Map.entry("일식", "JAPANESE_FOOD"),
+                Map.entry("중식", "CHINESE_FOOD"),
+                Map.entry("양식", "WESTERN_FOOD"),
+                Map.entry("아시안", "ASIAN_FOOD"),
+                Map.entry("패스트푸드", "FAST_FOOD"),
+                Map.entry("고기", "MEAT"),
+                Map.entry("치킨", "CHICKEN"),
+                Map.entry("분식", "SNACK_BAR")
         );
 
-        restaurantCategories.forEach((name, code) ->
-                placeCategoryRepository.save(PlaceCategory.create(restaurant, name, code))
+        restaurantCategories.forEach(entry ->
+                placeCategoryRepository.save(PlaceCategory.create(restaurant, entry.getKey(), entry.getValue()))
         );
 
-        // 카페 카테고리 (임시)
+        // 카페 카테고리 (4개)
         Map<String, String> cafeCategories = Map.of(
-                "A", "CAFE_A",
-                "B", "CAFE_B",
-                "C", "CAFE_C"
+                "개인카페", "LOCAL_CAFE",
+                "디저트", "DESSERT_CAFE",
+                "가맹점", "FRANCHISE_CAFE",
+                "보드게임", "BOARDGAME_CAFE"
         );
 
         cafeCategories.forEach((name, code) ->
                 placeCategoryRepository.save(PlaceCategory.create(cafe, name, code))
         );
 
-        // 술집 카테고리
+        // 술집 카테고리 (4개)
         Map<String, String> barCategories = Map.of(
-                "소주·맥주", "SOJU_BEER",
+                "요리주점", "FOOD_BAR",
                 "이자카야", "IZAKAYA",
-                "막걸리", "MAKGEOLLI",
-                "펍·칵테일", "PUB_COCKTAIL",
-                "와인", "WINE"
+                "실내포차", "INDOOR_POCHA",
+                "칵테일바", "COCKTAIL_BAR"
         );
 
         barCategories.forEach((name, code) ->
                 placeCategoryRepository.save(PlaceCategory.create(bar, name, code))
         );
 
-        // 스터디 카테고리
+        // 스터디 카테고리 (2개)
         Map<String, String> studyCategories = Map.of(
-                "독서실", "STUDY_ROOM",
-                "스터디카페", "STUDY_CAFE",
                 "도서관", "LIBRARY",
-                "스터디룸", "STUDY_LOUNGE"
+                "스터디카페", "STUDY_CAFE"
         );
 
         studyCategories.forEach((name, code) ->

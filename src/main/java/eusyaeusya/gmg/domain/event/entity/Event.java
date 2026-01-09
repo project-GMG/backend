@@ -66,6 +66,10 @@ public class Event extends BaseTimeEntity {
     @Column(name = "status", nullable = false, length = 20)
     private EventStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PlaceSearchStatus placeSearchStatus;
+
     @Column(name = "timezone", nullable = false, length = 64)
     private String timezone;
 
@@ -81,6 +85,7 @@ public class Event extends BaseTimeEntity {
             LocalTime timeStart,
             LocalTime timeEnd,
             EventStatus status,
+            PlaceSearchStatus placeSearchStatus,
             String timezone
     ) {
         // 날짜 범위 검증
@@ -98,6 +103,7 @@ public class Event extends BaseTimeEntity {
         this.timeStart = timeStart;
         this.timeEnd = timeEnd;
         this.status = status != null ? status : EventStatus.OPEN;
+        this.placeSearchStatus = placeSearchStatus != null ? placeSearchStatus : PlaceSearchStatus.PENDING;
         this.timezone = timezone != null ? timezone : "Asia/Seoul";
     }
 
@@ -182,6 +188,14 @@ public class Event extends BaseTimeEntity {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    public void completePlaceSearch() {
+        this.placeSearchStatus = PlaceSearchStatus.COMPLETED;
+    }
+
+    public void failPlaceSearch() {
+        this.placeSearchStatus = PlaceSearchStatus.FAILED;
     }
 
     @FunctionalInterface

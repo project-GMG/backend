@@ -7,7 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface PlaceRepository extends JpaRepository<Place, Long> {
+
+    Optional<Place> findByPlaceExternalId(String placeExternalId);
+
+    List<Place> findAllByPlaceExternalIdIn(List<String> placeExternalIds);
 
     @Query(value = """
             SELECT p.id AS id, p.name AS name, p.image_url AS imageUrl
