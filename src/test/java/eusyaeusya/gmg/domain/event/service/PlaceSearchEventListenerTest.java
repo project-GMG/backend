@@ -1,7 +1,5 @@
-package eusyaeusya.gmg.domain.event;
+package eusyaeusya.gmg.domain.event.service;
 
-import eusyaeusya.gmg.domain.event.service.PlaceSearchEvent;
-import eusyaeusya.gmg.domain.event.service.PlaceSearchEventListener;
 import eusyaeusya.gmg.domain.place.service.PlaceSearchOrchestrator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
