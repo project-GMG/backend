@@ -13,6 +13,7 @@ import eusyaeusya.gmg.domain.event.repository.EventPlaceTypeRepository;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
+import eusyaeusya.gmg.domain.place.service.PlaceSearchOrchestrator;
 import eusyaeusya.gmg.domain.place.service.PlaceTypeService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,9 @@ class EventServiceTest {
     @Mock
     private HeatmapService heatmapService;
 
+    @Mock
+    private PlaceSearchOrchestrator placeSearchOrchestrator;
+
     @Test
     @DisplayName("Event 정상 생성 테스트")
     void success_createEvent() {
@@ -69,6 +73,7 @@ class EventServiceTest {
                 .willReturn(mockSavedEvent);
         given(eventPlaceTypeRepository.saveAll(any()))
                 .willReturn(List.of());
+        doNothing().when(placeSearchOrchestrator).fetchAndSaveAsync(anyLong());
         // when
         EventCreateResponse response = eventService.createEvent(request);
 
@@ -82,6 +87,7 @@ class EventServiceTest {
         then(placeTypeService).should(times(1)).findByCodes(request.placeTypeCodes());
         then(eventRepository).should(times(1)).save(any(Event.class));
         then(eventPlaceTypeRepository).should(times(1)).saveAll(any());
+        then(placeSearchOrchestrator).should(times(1)).fetchAndSaveAsync(anyLong());
     }
 
     @Test
