@@ -100,7 +100,7 @@ class PlaceServiceTest {
         verify(placeCategoryRepository).findById(categoryId);
         verify(eventPlaceTypeRepository).findByEventWithPlaceType(event);
         verify(placeRepository).findPlacesWithinRadius(
-                eq(categoryId), anyDouble(), anyDouble(), eq(500),
+                eq(categoryId), anyDouble(), anyDouble(), eq(250),
                 anyDouble(), anyDouble(), anyDouble(), anyDouble(), any(PageRequest.class)
         );
     }
