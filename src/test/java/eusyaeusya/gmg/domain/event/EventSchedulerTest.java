@@ -1,6 +1,5 @@
-package eusyaeusya.gmg.domain.event.service;
+package eusyaeusya.gmg.domain.event;
 
-import eusyaeusya.gmg.domain.event.EventScheduler;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
 import org.junit.jupiter.api.DisplayName;
