@@ -2,6 +2,9 @@ package eusyaeusya.gmg.domain.place.service;
 
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.place.service.enrichment.PlaceEnrichmentService;
+import eusyaeusya.gmg.domain.place.service.search.PlaceFetchService;
+import eusyaeusya.gmg.domain.place.service.search.PlaceSearchTransactionService;
 import eusyaeusya.gmg.infra.kakao.dto.KakaoPlaceDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +34,9 @@ class PlaceSearchTransactionServiceTest {
     private PlaceService placeService;
 
     @Mock
+    private PlaceEnrichmentService placeEnrichmentService;
+
+    @Mock
     private EventRepository eventRepository;
 
     @Test
@@ -43,6 +50,7 @@ class PlaceSearchTransactionServiceTest {
         KakaoPlaceDto dto = mock(KakaoPlaceDto.class);
         List<KakaoPlaceDto> dtos = List.of(dto);
         given(placeFetchService.fetchPlacesForEvent(event)).willReturn(dtos);
+        given(placeService.savePlaces(dtos)).willReturn(new ArrayList<>());
 
         // when
         placeSearchTransactionService.fetchAndSavePlaces(eventId);

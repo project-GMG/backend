@@ -1,5 +1,7 @@
 package eusyaeusya.gmg.domain.place.service;
 
+import eusyaeusya.gmg.domain.place.service.search.PlaceSearchOrchestrator;
+import eusyaeusya.gmg.domain.place.service.search.PlaceSearchTransactionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
