@@ -67,6 +67,7 @@ jobs:
             DB_USERNAME=${{ secrets.DEV_DB_USERNAME }}
             DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}
             KAKAO_MAP_API_KEY=${{ secrets.KAKAO_MAP_API_KEY }}
+            ACTUATOR_ALLOWED_IP=${{ secrets.ACTUATOR_ALLOWED_IP }}
             EOF
             
             # 새 컨테이너 실행
