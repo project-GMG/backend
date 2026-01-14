@@ -6,6 +6,7 @@ import eusyaeusya.gmg.domain.event.repository.EventPlaceTypeRepository;
 import eusyaeusya.gmg.domain.place.entity.PlaceCategory;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
 import eusyaeusya.gmg.domain.place.repository.PlaceCategoryRepository;
+import eusyaeusya.gmg.domain.place.service.search.PlaceFetchService;
 import eusyaeusya.gmg.infra.kakao.client.KakaoMapClient;
 import eusyaeusya.gmg.infra.kakao.dto.KakaoPlaceDto;
 import org.junit.jupiter.api.BeforeEach;
