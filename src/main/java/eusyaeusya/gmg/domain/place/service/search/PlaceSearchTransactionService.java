@@ -1,9 +1,10 @@
-package eusyaeusya.gmg.domain.place.service;
+package eusyaeusya.gmg.domain.place.service.search;
 
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.place.service.PlaceService;
 import eusyaeusya.gmg.infra.kakao.dto.KakaoPlaceDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
