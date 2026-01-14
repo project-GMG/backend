@@ -12,7 +12,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
+        format_sql: false
         generate_statistics: true
   flyway:
     enabled: true
@@ -60,16 +60,14 @@ management:
 
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
+    enabled: false
   api-docs:
-    path: /api-docs
+    enabled: false
 
 logging:
-  config: classpath:logback/logback-dev.xml
+  config: classpath:logback/logback-prod.xml
   level:
-    eusyaeusya.gmg: trace
+    eusyaeusya.gmg: info
 
 management-config:
-  allowed-ip: ${ACTUATOR_ALLOWED_IP:0.0.0.0/0}
+  allowed-ip: ${ACTUATOR_ALLOWED_IP}

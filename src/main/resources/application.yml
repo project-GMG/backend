@@ -12,3 +12,6 @@ kakao:
     api:
       base-url: https://dapi.kakao.com
       category-group-code: FD6,CE7
+
+management-config:
+  allowed-ip: ${ACTUATOR_ALLOWED_IP:127.0.0.1}
