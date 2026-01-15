@@ -13,6 +13,7 @@ import eusyaeusya.gmg.domain.event.repository.EventRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
 import eusyaeusya.gmg.domain.place.service.PlaceTypeService;
+import eusyaeusya.gmg.domain.place.service.listener.PlaceSearchEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;

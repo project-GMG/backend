@@ -23,6 +23,12 @@ kakao:
     api:
       key: ${KAKAO_MAP_API_KEY}
 
+google:
+  maps:
+    api:
+      base-url: https://places.googleapis.com
+      key: ${GOOGLE_MAPS_API_KEY}
+
 management:
   endpoints:
     web:

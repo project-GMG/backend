@@ -2,18 +2,62 @@ package eusyaeusya.gmg.domain.place.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eusyaeusya.gmg.infra.google.dto.GooglePlaceDetailsResponse;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class OpeningHours {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .findAndRegisterModules();
     private final Map<String, String> hours;
 
     public OpeningHours(String jsonString) {
         this.hours = parseJson(jsonString);
+    }
+
+    public static String fromGooglePeriods(List<GooglePlaceDetailsResponse.Period> periods) {
+        if (periods == null || periods.isEmpty()) {
+            return "{}";
+        }
+
+        Map<String, String> hoursMap = new HashMap<>();
+        for (GooglePlaceDetailsResponse.Period period : periods) {
+            if (period.open() == null || period.close() == null) continue;
+
+            String dayKey = convertGoogleDayToKey(period.open().day());
+            String timeRange = formatGoogleTime(period.open()) + "-" + formatGoogleTime(period.close());
+            hoursMap.put(dayKey, timeRange);
+        }
+
+        try {
+            return objectMapper.writeValueAsString(hoursMap);
+        } catch (JsonProcessingException e) {
+            return "{}";
+        }
+    }
+
+    private static String convertGoogleDayToKey(int googleDay) {
+        return switch (googleDay) {
+            case 0 -> "sun";
+            case 1 -> "mon";
+            case 2 -> "tue";
+            case 3 -> "wed";
+            case 4 -> "thu";
+            case 5 -> "fri";
+            case 6 -> "sat";
+            default -> "unknown";
+        };
+    }
+
+    private static String formatGoogleTime(GooglePlaceDetailsResponse.TimeInfo timeInfo) {
+        if (timeInfo == null || timeInfo.hour() == null || timeInfo.minute() == null) {
+            return "00:00";
+        }
+        return String.format("%02d:%02d", timeInfo.hour(), timeInfo.minute());
     }
 
     @SuppressWarnings("unchecked")
