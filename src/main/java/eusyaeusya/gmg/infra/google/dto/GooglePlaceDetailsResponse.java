@@ -8,7 +8,8 @@ public record GooglePlaceDetailsResponse(
         @JsonProperty("id") String id,
         @JsonProperty("displayName") DisplayName displayName,
         @JsonProperty("regularOpeningHours") OpeningHours regularOpeningHours,
-        @JsonProperty("photos") List<Photo> photos
+        @JsonProperty("photos") List<Photo> photos,
+        @JsonProperty("rating") Double rating
 ) {
     public record DisplayName(
             @JsonProperty("text") String text,

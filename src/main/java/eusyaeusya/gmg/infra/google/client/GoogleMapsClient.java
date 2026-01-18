@@ -89,7 +89,7 @@ public class GoogleMapsClient {
         try {
             return webClient.get()
                     .uri("/v1/places/{placeId}", placeId)
-                    .header("X-Goog-FieldMask", "id,displayName,regularOpeningHours,photos")
+                    .header("X-Goog-FieldMask", "id,displayName,regularOpeningHours,photos,rating")
                     .header("Accept-Language", "ko")
                     .retrieve()
                     .bodyToMono(GooglePlaceDetailsResponse.class)
