@@ -104,9 +104,17 @@ public class OpeningHours {
             return false;
         }
 
-        // 모임 시간대가 영업시간 내에 완전히 포함되는지 확인
-        return !dayHours.start().isAfter(startTime) &&
-                !dayHours.end().isBefore(endTime);
+        LocalTime open = dayHours.start();
+        LocalTime close = dayHours.end();
+
+        if (open.isBefore(close)) {
+            // 일반적인 영업 시간 (예: 09:00 - 22:00)
+            return !open.isAfter(startTime) && !close.isBefore(endTime);
+        } else {
+            // 자정을 넘기는 영업 시간 (예: 18:00 - 02:00)
+            // startTime-endTime이 (open ~ 23:59) 또는 (00:00 ~ close)에 완전히 포함되어야 함
+            return !open.isAfter(startTime) || !close.isBefore(endTime);
+        }
     }
 
     public record TimeRange(LocalTime start, LocalTime end) {

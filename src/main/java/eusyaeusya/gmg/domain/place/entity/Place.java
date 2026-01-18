@@ -160,8 +160,8 @@ public class Place extends BaseTimeEntity {
     }
 
     public boolean isOpenOn(LocalDate date, LocalTime startTime, LocalTime endTime) {
-        if (openHoursJson == null || openHoursJson.isEmpty()) {
-            return false;
+        if (openHoursJson == null || openHoursJson.isEmpty() || openHoursJson.equals("{}")) {
+            return true;
         }
         DayOfWeek dayOfWeek = date.getDayOfWeek();
         return getOpeningHours().isOpenDuring(dayOfWeek, startTime, endTime);
