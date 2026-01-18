@@ -132,6 +132,6 @@
         <appender-ref ref="INFO_LOG_FILE"/>
         <appender-ref ref="WARN_LOG_FILE"/>
         <appender-ref ref="ERROR_LOG_FILE"/>
-        <appender-ref ref="LOKI"/>
+        <!--<appender-ref ref="LOKI"/>-->
     </root>
 </configuration>
