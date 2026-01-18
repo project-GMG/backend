@@ -1,5 +1,6 @@
 package eusyaeusya.gmg.config.security;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,7 @@ import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
 import java.util.function.Supplier;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -41,8 +43,24 @@ public class SecurityConfig {
             Supplier<Authentication> authentication,
             RequestAuthorizationContext context) {
         String remoteAddress = context.getRequest().getRemoteAddr();
-        boolean allowed = new IpAddressMatcher(allowedIp)
-                .matches(remoteAddress);
+
+        // 다중 IP 지원: 쉼표로 구분
+        String[] allowedIps = allowedIp.split(",");
+        boolean allowed = false;
+
+        for (String ip : allowedIps) {
+            if (new IpAddressMatcher(ip.trim()).matches(remoteAddress)) {
+                allowed = true;
+                break;
+            }
+        }
+
+        if (!allowed) {
+            log.warn("Actuator access denied: IP={}, Allowed={}", remoteAddress, allowedIp);
+        } else {
+            log.debug("Actuator access granted: IP={}", remoteAddress);
+        }
+
         return new AuthorizationDecision(allowed);
     }
 }
