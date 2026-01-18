@@ -12,7 +12,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
+        format_sql: false
         generate_statistics: true
   flyway:
     enabled: true
@@ -23,12 +23,6 @@ kakao:
   map:
     api:
       key: ${KAKAO_MAP_API_KEY}
-
-google:
-  maps:
-    api:
-      base-url: https://places.googleapis.com
-      key: ${GOOGLE_MAPS_API_KEY}
 
 management:
   endpoints:
@@ -44,14 +38,14 @@ management:
     tags:
       application: gmg
       environment: ${spring.profiles.active}
-      enable:
-        jvm: true
-        process: true
-        system: true
-        tomcat: true
-        logback: true
-        hikaricp: true
-        hibernate: true
+    enable:
+      jvm: true
+      process: true
+      system: true
+      tomcat: true
+      logback: true
+      hikaricp: true
+      hibernate: true
   prometheus:
     metrics:
       export:
@@ -64,18 +58,16 @@ management:
 
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
+    enabled: false
   api-docs:
-    path: /api-docs
+    enabled: false
 
 logging:
-  config: classpath:logback/logback-dev.xml
+  config: classpath:logback/logback-prod.xml
   loki:
-    url: ${LOKI_URL:http://localhost:3100/loki/api/v1/push}
+    url: ${LOKI_URL}
   level:
-    eusyaeusya.gmg: trace
+    eusyaeusya.gmg: info
 
 management-config:
-  allowed-ip: ${ACTUATOR_ALLOWED_IP:127.0.0.1}
+  allowed-ip: ${ACTUATOR_ALLOWED_IP}

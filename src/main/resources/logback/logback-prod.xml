@@ -4,6 +4,7 @@
     <property name="FILE_LOG_PATTERN"
               value="[%d{yyyy-MM-dd HH:mm:ss,Asia/Seoul}] [prod] [%thread] [%X{traceId}] %-5level [%C.%M:%L] - %msg%n"/>
     <property name="LOGS_ROOT_PATH" value="/logs"/>
+    <springProperty scope="context" name="LOKI_URL" source="logging.loki.url"/>
 
     <!-- INFO 로그 -->
     <appender name="INFO_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -76,9 +77,26 @@
         <appender-ref ref="ERROR_LOG_FILE"/>
     </appender>
 
+    <!-- Loki Appender -->
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>${LOKI_URL}</url>
+        </http>
+        <format>
+            <label>
+                <pattern>app=gmg,env=prod,level=%level</pattern>
+            </label>
+            <message>
+                <pattern>${FILE_LOG_PATTERN}</pattern>
+            </message>
+            <sortByTime>true</sortByTime>
+        </format>
+    </appender>
+
     <root level="INFO">
         <appender-ref ref="ASYNC_INFO"/>
         <appender-ref ref="ASYNC_WARN"/>
         <appender-ref ref="ASYNC_ERROR"/>
+        <appender-ref ref="LOKI"/>
     </root>
 </configuration>

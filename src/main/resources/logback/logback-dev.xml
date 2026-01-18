@@ -4,6 +4,7 @@
     <property name="FILE_LOG_PATTERN"
               value="[%d{yyyy-MM-dd HH:mm:ss,Asia/Seoul}] [dev] [%thread] [%X{traceId}] %-5level [%C.%M:%L] - %msg%n"/>
     <property name="LOGS_ROOT_PATH" value="/logs"/>
+    <springProperty scope="context" name="LOKI_URL" source="logging.loki.url"/>
 
     <!-- Console -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -107,6 +108,22 @@
         </filter>
     </appender>
 
+    <!-- Loki Appender -->
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>${LOKI_URL}</url>
+        </http>
+        <format>
+            <label>
+                <pattern>app=gmg,env=dev,level=%level</pattern>
+            </label>
+            <message>
+                <pattern>${FILE_LOG_PATTERN}</pattern>
+            </message>
+            <sortByTime>true</sortByTime>
+        </format>
+    </appender>
+
     <!-- Logger 설정 -->
     <root level="TRACE">
         <appender-ref ref="CONSOLE"/>
@@ -115,5 +132,6 @@
         <appender-ref ref="INFO_LOG_FILE"/>
         <appender-ref ref="WARN_LOG_FILE"/>
         <appender-ref ref="ERROR_LOG_FILE"/>
+        <appender-ref ref="LOKI"/>
     </root>
 </configuration>
