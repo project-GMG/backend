@@ -1,4 +1,4 @@
-package eusyaeusya.gmg.domain.place.service;
+package eusyaeusya.gmg.domain.place.service.search;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

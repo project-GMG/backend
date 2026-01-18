@@ -1,6 +1,7 @@
 package eusyaeusya.gmg.domain.place.entity;
 
 import eusyaeusya.gmg.common.audit.entity.BaseTimeEntity;
+import eusyaeusya.gmg.common.converter.JsonStringConverter;
 import eusyaeusya.gmg.domain.place.util.OpeningHours;
 import eusyaeusya.gmg.infra.kakao.dto.KakaoPlaceDto;
 import jakarta.persistence.*;
@@ -57,12 +58,13 @@ public class Place extends BaseTimeEntity {
     @Column(length = 255)
     private String address;
 
-    @Column(name = "image_url", length = 500)
+    @Column(name = "image_url", length = 1000)
     private String imageUrl;
 
     @Column(precision = 2, scale = 1, nullable = false)
     private BigDecimal rating;
 
+    @Convert(converter = JsonStringConverter.class)
     @Column(name = "open_hours_json", columnDefinition = "JSON")
     private String openHoursJson;
 
@@ -139,6 +141,15 @@ public class Place extends BaseTimeEntity {
                 .rating(BigDecimal.ZERO) // 초기값
                 .openHoursJson(null) // 카카오맵 기본 API에는 영업시간 없음
                 .build();
+    }
+
+    public void updateInfoFromGoogle(String imageUrl, String openHoursJson) {
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            this.imageUrl = imageUrl;
+        }
+        if (openHoursJson != null && !openHoursJson.equals("{}")) {
+            this.openHoursJson = openHoursJson;
+        }
     }
 
     public OpeningHours getOpeningHours() {
