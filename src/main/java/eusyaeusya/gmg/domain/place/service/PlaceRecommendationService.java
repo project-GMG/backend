@@ -3,6 +3,7 @@ package eusyaeusya.gmg.domain.place.service;
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
+import eusyaeusya.gmg.domain.event.repository.EventPlaceTypeRepository;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantDislikedCategoryRepository;
@@ -12,6 +13,7 @@ import eusyaeusya.gmg.domain.place.util.RecommendationScoreCalculator;
 import eusyaeusya.gmg.domain.place.vo.CategoryRecommendations;
 import eusyaeusya.gmg.domain.place.vo.PlaceRecommendation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,17 +33,8 @@ public class PlaceRecommendationService {
 
     private final EventRepository eventRepository;
     private final PlaceRepository placeRepository;
+    private final EventPlaceTypeRepository eventPlaceTypeRepository;
     private final ParticipantDislikedCategoryRepository dislikedCategoryRepository;
-
-    public List<CategoryRecommendations> generateRecommendations(String hashUrl) {
-        Event event = eventRepository.findByHashUrl(hashUrl)
-                .orElseThrow(() -> new NotFoundException(
-                        EventErrorCode.EVENT_NOT_FOUND,
-                        String.format("이벤트를 찾을 수 없습니다: %s", hashUrl)
-                ));
-
-        return generateRecommendations(event);
-    }
 
     public List<CategoryRecommendations> generateRecommendations(Long eventId) {
         Event event = eventRepository.findById(eventId)
@@ -52,32 +46,38 @@ public class PlaceRecommendationService {
         return generateRecommendations(event);
     }
 
-    private List<CategoryRecommendations> generateRecommendations(Event event) {
-        // 1. 모든 active한 장소 조회
-        List<Place> allPlaces = placeRepository.findAll().stream()
-                .filter(Place::getIsActive)
-                .toList();
-
-        // 2. 영업시간 필터링 - 최소 하루라도 영업하는 곳만
-        List<Place> operatingPlaces = filterByOperatingHours(allPlaces, event);
-
-        // 3. PlaceType별 비선호도 집계 (완료된 참여자만)
-        Map<Long, Integer> placeTypeDislikes = countPlaceTypeDislikes(event.getId());
-
-        // 4. PlaceType별로 그룹핑하고 점수 계산
-        Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType =
-                groupAndScorePlaces(operatingPlaces, event, placeTypeDislikes);
-
-        // 5. PlaceType별 상위 3개씩 선택
-        return selectTopRecommendations(recommendationsByPlaceType);
-    }
-
-    private Event getEvent(String hashUrl) {
-        return eventRepository.findByHashUrl(hashUrl)
+    public EventRecommendationResult generateRecommendationsWithEventId(String hashUrl) {
+        Event event = eventRepository.findByHashUrl(hashUrl)
                 .orElseThrow(() -> new NotFoundException(
                         EventErrorCode.EVENT_NOT_FOUND,
                         String.format("이벤트를 찾을 수 없습니다: %s", hashUrl)
                 ));
+
+        List<CategoryRecommendations> recommendations = generateRecommendations(event);
+        return new EventRecommendationResult(event.getId(), recommendations);
+    }
+
+    private List<CategoryRecommendations> generateRecommendations(Event event) {
+        // 1. 이벤트의 PlaceType 조회
+        List<Long> eventPlaceTypeIds = eventPlaceTypeRepository.findByEventWithPlaceType(event).stream()
+                .map(ept -> ept.getPlaceType().getId())
+                .toList();
+
+        // 2. 이벤트에 해당하는 PlaceType을 가진 active한 장소 조회
+        List<Place> allPlaces = placeRepository.findAllByPlaceTypeIdInAndIsActiveTrue(eventPlaceTypeIds);
+
+        // 3. 영업시간 필터링 - 최소 하루라도 영업하는 곳만
+        List<Place> operatingPlaces = filterByOperatingHours(allPlaces, event);
+
+        // 4. PlaceType별 비선호도 집계 (완료된 참여자만)
+        Map<Long, Integer> placeTypeDislikes = countPlaceTypeDislikes(event.getId());
+
+        // 5. PlaceType별로 그룹핑하고 점수 계산
+        Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType =
+                groupAndScorePlaces(operatingPlaces, event, placeTypeDislikes);
+
+        // 6. PlaceType별 상위 3개씩 선택
+        return selectTopRecommendations(recommendationsByPlaceType);
     }
 
     private List<Place> filterByOperatingHours(List<Place> places, Event event) {
@@ -126,17 +126,11 @@ public class PlaceRecommendationService {
                             place.getPlaceType().getLabel(),
                             score,
                             matchingDays,
-                            totalDays
+                            totalDays,
+                            placeTypeId
                     );
                 })
-                .collect(Collectors.groupingBy(
-                        rec -> places.stream()
-                                .filter(p -> p.getName().equals(rec.placeName()))
-                                .findFirst()
-                                .orElseThrow()
-                                .getPlaceType()
-                                .getId()
-                ));
+                .collect(Collectors.groupingBy(PlaceRecommendation::placeTypeId));
     }
 
     private List<CategoryRecommendations> selectTopRecommendations(
@@ -159,17 +153,6 @@ public class PlaceRecommendationService {
                     return new CategoryRecommendations(placeTypeName, topRecommendations);
                 })
                 .toList();
-    }
-
-    public EventRecommendationResult generateRecommendationsWithEventId(String hashUrl) {
-        Event event = eventRepository.findByHashUrl(hashUrl)
-                .orElseThrow(() -> new NotFoundException(
-                        EventErrorCode.EVENT_NOT_FOUND,
-                        String.format("이벤트를 찾을 수 없습니다: %s", hashUrl)
-                ));
-
-        List<CategoryRecommendations> recommendations = generateRecommendations(event);
-        return new EventRecommendationResult(event.getId(), recommendations);
     }
 
     public record EventRecommendationResult(
