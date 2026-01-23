@@ -3,14 +3,14 @@
 # App EC2 + Monitoring EC2
 # =====================================================
 
-# Amazon Linux 2023 ARM AMI 조회
-data "aws_ami" "amazon_linux_arm" {
+# Ubuntu
+data "aws_ami" "ubuntu_arm" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"]  # Canonical 공식
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-arm64"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-*"]
   }
 
   filter {
@@ -71,7 +71,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 
 # App EC2 Instance
 resource "aws_instance" "app" {
-  ami                    = data.aws_ami.amazon_linux_arm.id
+  ami                    = data.aws_ami.ubuntu_arm.id
   instance_type          = var.app_instance_type
   key_name               = var.key_name
   subnet_id              = var.public_subnet_ids[0]
@@ -111,32 +111,34 @@ resource "aws_instance" "app" {
 
 # Monitoring EC2 Instance
 resource "aws_instance" "monitoring" {
-  ami                    = data.aws_ami.amazon_linux_arm.id
+  ami                    = data.aws_ami.ubuntu_arm.id
   instance_type          = var.monitoring_instance_type
   key_name               = var.key_name
   subnet_id              = var.public_subnet_ids[0]
   vpc_security_group_ids = [var.monitoring_sg_id]
 
   root_block_device {
-    volume_size = 30
+    volume_size = 20
     volume_type = "gp3"
     encrypted   = true
   }
 
-  user_data = base64encode(<<-EOF
+  user_data = <<-EOF
     #!/bin/bash
     # Docker 설치
-    dnf update -y
-    dnf install -y docker
+    apt-get update -y
+    apt-get install -y docker.io
     systemctl start docker
     systemctl enable docker
-    usermod -a -G docker ec2-user
-    
+    usermod -a -G docker ubuntu
+
     # Docker Compose 설치
     curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
+
+    # AWS CLI 설치 (ECR 로그인용)
+    apt-get install -y awscli
   EOF
-  )
 
   tags = {
     Name        = "${var.project_name}-monitoring-${var.environment}"
