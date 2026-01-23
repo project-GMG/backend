@@ -68,7 +68,6 @@ jobs:
             DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}
             KAKAO_MAP_API_KEY=${{ secrets.KAKAO_MAP_API_KEY }}
             ACTUATOR_ALLOWED_IP=${{ secrets.ACTUATOR_ALLOWED_IP }}
-            LOKI_URL=${{ secrets.LOKI_URL }}
             EOF
             
             # 새 컨테이너 실행
@@ -83,6 +82,8 @@ jobs:
             # rm -f /tmp/myapp.env
             
             # 이전 이미지 정리
+            docker system prune -f
+            docker container prune -f
             docker image prune -af
 
       - name: Notify Discord
