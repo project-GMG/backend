@@ -1,102 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- logback/logback-prod.xml -->
 <configuration>
     <!-- 공통 변수 -->
-    <property name="FILE_LOG_PATTERN"
-              value="[%d{yyyy-MM-dd HH:mm:ss,Asia/Seoul}] [prod] [%thread] [%X{traceId}] %-5level [%C.%M:%L] - %msg%n"/>
-    <property name="LOGS_ROOT_PATH" value="/logs"/>
-    <springProperty scope="context" name="LOKI_URL" source="logging.loki.url"/>
+    <property name="CONSOLE_LOG_PATTERN"
+              value="[%d{yyyy-MM-dd HH:mm:ss,Asia/Seoul}] [prod] [%thread] [trace:%X{traceId:-}, span:%X{spanId:-}, req:%X{requestId:-}] %-5level [%C.%M:%L] - %msg%n"/>
+    <!-- JSON 콘솔 출력 (Promtail이 파싱) -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- 타임스탬프 포맷 -->
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSXXX</timestampPattern>
+            <timeZone>Asia/Seoul</timeZone>
 
-    <!-- INFO 로그 -->
-    <appender name="INFO_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS_ROOT_PATH}/info/info.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS_ROOT_PATH}/info/info-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <!-- 기본 필드 제공자 -->
+            <provider class="net.logstash.logback.composite.loggingevent.LoggingEventPatternJsonProvider">
+                <pattern>
+                    {
+                    "app": "${appName}",
+                    "environment": "production",
+                    "host": "${HOSTNAME:-unknown}",
+                    "traceId": "%X{traceId:-}",
+                    "spanId": "%X{spanId:-}",
+                    "requestId": "%X{requestId:-}"
+                    }
+                </pattern>
+            </provider>
+
+            <!-- MDC에서 id가져오기 -->
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>requestId</includeMdcKeyName>
+
+            <!-- 스택 트레이스를 문자열로 포함 -->
+            <includeStackTrace>true</includeStackTrace>
+
+            <!-- caller 정보 포함 (성능 영향 있으므로 필요시만) -->
+            <includeCallerData>false</includeCallerData>
+
+            <!-- 컨텍스트 이름 제외 (불필요한 필드 제거) -->
+            <includeContext>false</includeContext>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
     </appender>
 
-    <!-- WARN 로그 -->
-    <appender name="WARN_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS_ROOT_PATH}/warn/warn.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS_ROOT_PATH}/warn/warn-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>WARN</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
+    <!-- 비동기 처리 -->
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="CONSOLE_JSON"/>
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <neverBlock>false</neverBlock>
     </appender>
 
-    <!-- ERROR 로그 -->
-    <appender name="ERROR_LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS_ROOT_PATH}/error/error.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS_ROOT_PATH}/error/error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>90</maxHistory>
-            <totalSizeCap>2GB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>ERROR</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
+    <!-- SQL 전체 출력은 WARN 이상만 -->
+    <logger name="org.hibernate.SQL" level="WARN" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </logger>
 
-    <!-- Async Wrapping -->
-    <appender name="ASYNC_INFO" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="INFO_LOG_FILE"/>
-        <queueSize>5000</queueSize>
-    </appender>
+    <logger name="org.hibernate.orm.jdbc.bind" level="WARN" additivity="false"/>
 
-    <appender name="ASYNC_WARN" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="WARN_LOG_FILE"/>
-    </appender>
+    <!-- Spring Framework -->
+    <logger name="org.springframework" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </logger>
 
-    <appender name="ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="ERROR_LOG_FILE"/>
-    </appender>
+    <logger name="org.springframework.web" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </logger>
 
-    <!-- Loki Appender -->
-    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
-        <http>
-            <url>${LOKI_URL}</url>
-        </http>
-        <format>
-            <label>
-                <pattern>app=gmg,env=prod,level=%level</pattern>
-            </label>
-            <message>
-                <pattern>${FILE_LOG_PATTERN}</pattern>
-            </message>
-            <sortByTime>true</sortByTime>
-        </format>
-    </appender>
-
+    <!-- 외부 라이브러리 -->
+    <logger name="com.zaxxer.hikari" level="INFO" additivity="false">
+        <appender-ref ref="ASYNC_CONSOLE"/>
+    </logger>
+    
     <root level="INFO">
-        <appender-ref ref="ASYNC_INFO"/>
-        <appender-ref ref="ASYNC_WARN"/>
-        <appender-ref ref="ASYNC_ERROR"/>
-        <appender-ref ref="LOKI"/>
+        <appender-ref ref="ASYNC_CONSOLE"/>
     </root>
 </configuration>
