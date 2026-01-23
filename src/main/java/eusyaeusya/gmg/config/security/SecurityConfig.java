@@ -1,5 +1,6 @@
 package eusyaeusya.gmg.config.security;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -8,12 +9,15 @@ import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
 import java.util.function.Supplier;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Slf4j
 @Configuration
@@ -35,6 +39,14 @@ public class SecurityConfig {
                         .access(this::hasIpAddress)
                         .anyRequest().permitAll()
                 );
+        http
+                .headers(headers -> headers
+                        .contentTypeOptions(withDefaults())
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                        .xssProtection(HeadersConfigurer.XXssConfig::disable)
+                        .contentSecurityPolicy(csp ->
+                                csp.policyDirectives("default-src 'self'"))
+                );
 
         return http.build();
     }
@@ -42,7 +54,8 @@ public class SecurityConfig {
     private AuthorizationDecision hasIpAddress(
             Supplier<Authentication> authentication,
             RequestAuthorizationContext context) {
-        String remoteAddress = context.getRequest().getRemoteAddr();
+
+        String remoteAddress = resolveClientIp(context.getRequest());
 
         // 다중 IP 지원: 쉼표로 구분
         String[] allowedIps = allowedIp.split(",");
@@ -62,5 +75,20 @@ public class SecurityConfig {
         }
 
         return new AuthorizationDecision(allowed);
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        // 프록시 환경: X-Forwarded-For 헤더 확인
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            // 첫 번째 IP가 실제 클라이언트 (체인: client, proxy1, proxy2)
+            String clientIp = xForwardedFor.split(",")[0].trim();
+            log.debug("X-Forwarded-For detected: header={}, resolved={}", xForwardedFor, clientIp);
+            return clientIp;
+        }
+
+        // 직접 연결: remoteAddr 사용
+        return request.getRemoteAddr();
     }
 }
