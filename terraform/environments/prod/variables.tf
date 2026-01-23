@@ -95,5 +95,5 @@ variable "db_password" {
 variable "domain_name" {
   description = "Domain name for ACM certificate"
   type        = string
-  default     = "api.xn--o39aa312i.com"  # api.가면가.com의 punycode
+  default     = "*.xn--o39aa312i.com"
 }

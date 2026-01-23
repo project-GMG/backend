@@ -49,7 +49,7 @@ resource "aws_lb_target_group_attachment" "app" {
   port             = 8080
 }
 
-# ACM Certificate
+# ACM Certificate (인증서 요청)
 resource "aws_acm_certificate" "main" {
   domain_name       = var.domain_name
   validation_method = "DNS"
@@ -62,6 +62,11 @@ resource "aws_acm_certificate" "main" {
     Name        = "${var.project_name}-cert-${var.environment}"
     Environment = var.environment
   }
+}
+
+# ACM Certificate Validation (검증 대기)
+resource "aws_acm_certificate_validation" "main" {
+  certificate_arn = aws_acm_certificate.main.arn
 }
 
 # HTTP Listener (HTTPS로 리다이렉트)
@@ -94,6 +99,5 @@ resource "aws_lb_listener" "https" {
     target_group_arn = aws_lb_target_group.app.arn
   }
 
-  # ACM 인증서 검증 완료 후에만 리스너 생성
-  depends_on = [aws_acm_certificate.main]
+  depends_on = [aws_acm_certificate_validation.main]
 }
