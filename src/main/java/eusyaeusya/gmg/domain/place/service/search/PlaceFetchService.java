@@ -1,4 +1,4 @@
-package eusyaeusya.gmg.domain.place.service;
+package eusyaeusya.gmg.domain.place.service.search;
 
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.entity.EventPlaceType;

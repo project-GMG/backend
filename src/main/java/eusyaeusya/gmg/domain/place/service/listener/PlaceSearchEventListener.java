@@ -1,6 +1,6 @@
-package eusyaeusya.gmg.domain.event.service;
+package eusyaeusya.gmg.domain.place.service.listener;
 
-import eusyaeusya.gmg.domain.place.service.PlaceSearchOrchestrator;
+import eusyaeusya.gmg.domain.place.service.search.PlaceSearchOrchestrator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

@@ -1,9 +1,12 @@
-package eusyaeusya.gmg.domain.place.service;
+package eusyaeusya.gmg.domain.place.service.search;
 
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.place.entity.Place;
+import eusyaeusya.gmg.domain.place.service.PlaceService;
+import eusyaeusya.gmg.domain.place.service.enrichment.PlaceEnrichmentService;
 import eusyaeusya.gmg.infra.kakao.dto.KakaoPlaceDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,7 @@ public class PlaceSearchTransactionService {
 
     private final PlaceFetchService placeFetchService;
     private final PlaceService placeService;
+    private final PlaceEnrichmentService placeEnrichmentService;
     private final EventRepository eventRepository;
 
     /**
@@ -30,9 +34,12 @@ public class PlaceSearchTransactionService {
 
         List<KakaoPlaceDto> placeDtos = placeFetchService.fetchPlacesForEvent(event);
 
-        placeService.savePlaces(placeDtos);
+        List<Place> savedPlaces = placeService.savePlaces(placeDtos);
 
-        log.info("장소 검색 및 저장 완료: eventId={}, placeCount={}", eventId, placeDtos.size());
+        // 구글 API를 통한 정보 보완
+        placeEnrichmentService.enrichPlaces(savedPlaces);
+
+        log.info("장소 검색 및 저장, 정보 보완 완료: eventId={}, placeCount={}", eventId, savedPlaces.size());
     }
 
     /**

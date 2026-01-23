@@ -68,6 +68,7 @@ jobs:
             DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}
             KAKAO_MAP_API_KEY=${{ secrets.KAKAO_MAP_API_KEY }}
             ACTUATOR_ALLOWED_IP=${{ secrets.ACTUATOR_ALLOWED_IP }}
+            GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
             EOF
             
             # 새 컨테이너 실행
