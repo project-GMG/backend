@@ -29,9 +29,9 @@ public class KakaoMapClient {
     private final WebClient webClient;
     private final KakaoMapProperties kakaoMapProperties;
 
-    public KakaoMapClient(KakaoMapProperties kakaoMapProperties) {
+    public KakaoMapClient(KakaoMapProperties kakaoMapProperties, WebClient.Builder webClientBuilder) {
         this.kakaoMapProperties = kakaoMapProperties;
-        this.webClient = WebClient.builder()
+        this.webClient = webClientBuilder
                 .baseUrl(kakaoMapProperties.getBaseUrl())
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + kakaoMapProperties.getKey())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
