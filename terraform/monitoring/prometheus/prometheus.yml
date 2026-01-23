@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus 자체 메트릭
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # GMG App EC2 메트릭 (Spring Boot Actuator)
+  - job_name: 'gmg-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['${APP_EC2_PRIVATE_IP}:8080']
+        labels:
+          app: 'gmg'
+          env: 'prod'
+    # App EC2의 Actuator IP 허용 필요
+    # ACTUATOR_ALLOWED_IP에 Monitoring EC2 Private IP 추가

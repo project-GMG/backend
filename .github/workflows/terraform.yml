@@ -1,0 +1,109 @@
+name: Terraform - Apply Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+env:
+  AWS_REGION: ap-northeast-2
+  TF_VERSION: "1.7.0"
+
+jobs:
+  terraform:
+    name: Terraform ${{ github.event.inputs.action }}
+    runs-on: ubuntu-latest
+    environment: prod
+    defaults:
+      run:
+        working-directory: terraform/environments/prod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Create terraform.tfvars
+        run: |
+          cat > terraform.tfvars << 'EOF'
+          aws_region   = "${{ env.AWS_REGION }}"
+          project_name = "gmg"
+          environment  = "prod"
+          
+          vpc_cidr             = "10.0.0.0/16"
+          availability_zones   = ["ap-northeast-2a", "ap-northeast-2c"]
+          public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+          private_subnet_cidrs = ["10.0.101.0/24", "10.0.102.0/24"]
+          
+          app_instance_type        = "t4g.medium"
+          monitoring_instance_type = "t4g.small"
+          key_name                 = "${{ secrets.AWS_KEY_NAME }}"
+          
+          db_instance_class    = "db.t4g.micro"
+          db_allocated_storage = 20
+          db_name              = "gmg"
+          db_username          = "${{ secrets.PROD_DB_USERNAME }}"
+          db_password          = "${{ secrets.PROD_DB_PASSWORD }}"
+          
+          domain_name = "api.xn--2i0bm4p.com"
+          EOF
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: github.event.inputs.action == 'plan' || github.event.inputs.action == 'apply'
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: github.event.inputs.action == 'apply'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        run: terraform destroy -auto-approve
+
+      - name: Terraform Output
+        if: github.event.inputs.action == 'apply'
+        run: terraform output -json > outputs.json
+
+      - name: Upload Terraform Outputs
+        if: github.event.inputs.action == 'apply'
+        uses: actions/upload-artifact@v6
+        with:
+          name: terraform-outputs
+          path: terraform/environments/prod/outputs.json
+
+      - name: Notify Discord
+        if: always()
+        uses: tsickert/discord-webhook@v7.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "🏗️ Terraform ${{ github.event.inputs.action }} 결과"
+          embed-description: |
+            **Action:** ${{ github.event.inputs.action }}
+            **Result:** ${{ job.status == 'success' && '✅ 성공' || '❌ 실패' }}
+            **Actor:** ${{ github.actor }}
+          embed-color: ${{ job.status == 'success' && '3066993' || '15158332' }}
