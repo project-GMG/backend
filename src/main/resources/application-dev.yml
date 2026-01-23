@@ -72,8 +72,6 @@ springdoc:
 
 logging:
   config: classpath:logback/logback-dev.xml
-  loki:
-    url: ${LOKI_URL:http://localhost:3100/loki/api/v1/push}
   level:
     eusyaeusya.gmg: trace
 

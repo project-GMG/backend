@@ -15,3 +15,11 @@ kakao:
 
 management-config:
   allowed-ip: ${ACTUATOR_ALLOWED_IP:127.0.0.1}
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  observations:
+    key-values:
+      application: ${spring.application.name:gmg}
