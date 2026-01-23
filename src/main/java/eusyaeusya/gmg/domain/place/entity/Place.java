@@ -143,12 +143,15 @@ public class Place extends BaseTimeEntity {
                 .build();
     }
 
-    public void updateInfoFromGoogle(String imageUrl, String openHoursJson) {
+    public void updateInfoFromGoogle(String imageUrl, String openHoursJson, BigDecimal rating) {
         if (imageUrl != null && !imageUrl.isBlank()) {
             this.imageUrl = imageUrl;
         }
         if (openHoursJson != null && !openHoursJson.equals("{}")) {
             this.openHoursJson = openHoursJson;
+        }
+        if (rating != null && rating.compareTo(BigDecimal.ZERO) > 0) {
+            this.rating = rating;
         }
     }
 
@@ -157,7 +160,7 @@ public class Place extends BaseTimeEntity {
     }
 
     public boolean isOpenOn(LocalDate date, LocalTime startTime, LocalTime endTime) {
-        if (openHoursJson == null || openHoursJson.isEmpty()) {
+        if (openHoursJson == null || openHoursJson.isEmpty() || openHoursJson.equals("{}")) {
             return false;
         }
         DayOfWeek dayOfWeek = date.getDayOfWeek();

@@ -13,8 +13,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @Entity
 @Table(
@@ -139,7 +140,7 @@ public class Event extends BaseTimeEntity {
             );
         }
 
-        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        long daysBetween = DAYS.between(startDate, endDate);
         if (daysBetween > MAX_DATE_RANGE_DAYS) {
             throw new BadRequestException(
                     EventErrorCode.DATE_RANGE_TOO_LONG,
@@ -158,7 +159,7 @@ public class Event extends BaseTimeEntity {
     }
 
     public int getTotalDays() {
-        return (int) ChronoUnit.DAYS.between(dateStart, dateEnd) + 1;
+        return (int) (DAYS.between(dateStart, dateEnd) + 1);
     }
 
     public boolean isClosed() {

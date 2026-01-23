@@ -16,6 +16,9 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
 
     List<Place> findAllByPlaceExternalIdIn(List<String> placeExternalIds);
 
+    @Query("SELECT p FROM Place p JOIN FETCH p.placeType WHERE p.placeType.id IN :placeTypeIds AND p.isActive = true")
+    List<Place> findAllByPlaceTypeIdInAndIsActiveTrue(@Param("placeTypeIds") List<Long> placeTypeIds);
+
     @Query(value = """
             SELECT p.id AS id, p.name AS name, p.image_url AS imageUrl
             FROM places p

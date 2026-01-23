@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -56,9 +57,15 @@ public class PlaceEnrichmentService {
                 openHoursJson = OpeningHours.fromGooglePeriods(details.regularOpeningHours().periods());
             }
 
-            place.updateInfoFromGoogle(imageUrl, openHoursJson);
-            log.info("장소 정보 보완 완료: id={}, name={}, hasImage={}, hasOpenHours={}",
-                    place.getId(), place.getName(), imageUrl != null, openHoursJson != null);
+            // 평점 보완
+            BigDecimal rating = null;
+            if (details.rating() != null) {
+                rating = BigDecimal.valueOf(details.rating());
+            }
+
+            place.updateInfoFromGoogle(imageUrl, openHoursJson, rating);
+            log.info("장소 정보 보완 완료: id={}, name={}, hasImage={}, hasOpenHours={}, rating={}",
+                    place.getId(), place.getName(), imageUrl != null, openHoursJson != null, rating);
         }
     }
 
