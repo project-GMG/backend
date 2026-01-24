@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: gmg
   profiles:
     active: local
   flyway:
