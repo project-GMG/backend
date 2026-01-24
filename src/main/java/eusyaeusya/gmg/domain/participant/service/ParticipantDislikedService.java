@@ -50,6 +50,8 @@ public class ParticipantDislikedService {
             Long participantId,
             ParticipantDislikedRequest request
     ) {
+        log.info("비선호 장소 등록 시작: hashUrl={}, participantId={}", hashUrl, participantId);
+
         Event event = getEvent(hashUrl);
         validateEventStatus(hashUrl, event);
 
@@ -67,7 +69,7 @@ public class ParticipantDislikedService {
                 event, participant, request.dislikedPlaceIds()
         );
 
-        log.info("비선호 데이터 등록 완료: participantId={}, categoryCount={}, placeCount={}",
+        log.info("비선호 장소 등록 완료: participantId={}, categoryCount={}, placeCount={}",
                 participantId, categoryCount, placeCount);
 
         return ParticipantDislikedResponse.of(participantId, categoryCount, placeCount);

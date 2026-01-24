@@ -49,6 +49,8 @@ public class KakaoMapClient {
             String y,
             int radius
     ) {
+        log.info("Kakao 장소 조회 시작");
+
         List<KakaoPlaceDto> allPlaces = new ArrayList<>();
         Set<String> seenIds = new HashSet<>(); // 중복 제거용
 
@@ -64,6 +66,7 @@ public class KakaoMapClient {
                 }
             }
         }
+        log.info("Kakao 장소 조회 완료");
 
         return allPlaces;
     }

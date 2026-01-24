@@ -58,6 +58,7 @@ public class PlaceRecommendationService {
     }
 
     private List<CategoryRecommendations> generateRecommendations(Event event) {
+        log.info("추천 장소 생성 시작: eventId={}", event.getId());
         // 1. 이벤트의 PlaceType 조회
         List<Long> eventPlaceTypeIds = eventPlaceTypeRepository.findByEventWithPlaceType(event).stream()
                 .map(ept -> ept.getPlaceType().getId())
@@ -76,6 +77,7 @@ public class PlaceRecommendationService {
         Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType =
                 groupAndScorePlaces(operatingPlaces, event, placeTypeDislikes);
 
+        log.info("추천 장소 생성 완료: eventId={}", event.getId());
         // 6. PlaceType별 상위 3개씩 선택
         return selectTopRecommendations(recommendationsByPlaceType);
     }

@@ -40,6 +40,8 @@ public class ParticipantUnavailableTimeService {
             Long participantId,
             ParticipantUnavailableTimeRequest request
     ) {
+        log.info("참가자 불가능 시간 입력 시작: hashUrl={}, participantId={}", hashUrl, participantId);
+
         Event event = getEventWithLock(hashUrl);
         validateEventStatus(hashUrl, event);
 
@@ -56,14 +58,6 @@ public class ParticipantUnavailableTimeService {
         sseService.broadcast(hashUrl, "heatmap-update", heatmapData);
 
         return ParticipantUnavailableTimeResponse.of(participantId, unavailableTimes.size());
-    }
-
-    private Event getEvent(String hashUrl) {
-        return eventRepository.findByHashUrl(hashUrl)
-                .orElseThrow(() -> new NotFoundException(
-                        EventErrorCode.EVENT_NOT_FOUND,
-                        String.format(EventErrorCode.EVENT_NOT_FOUND.getMessage(), ": %s", hashUrl)
-                ));
     }
 
     private Event getEventWithLock(String hashUrl) {
@@ -117,7 +111,7 @@ public class ParticipantUnavailableTimeService {
                 .toList();
 
         unavailableTimeRepository.saveAll(unavailableTimes);
-        log.info("불가능 시간 등록 완료: participantId={}, count={}",
+        log.info("참가자 불가능 시간 등록 완료: participantId={}, count={}",
                 participantId, unavailableTimes.size());
         return unavailableTimes;
     }

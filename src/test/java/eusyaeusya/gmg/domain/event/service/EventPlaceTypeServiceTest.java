@@ -46,7 +46,6 @@ class EventPlaceTypeServiceTest {
         // given
         String hashUrl = "abc123";
         Event event = mock(Event.class);
-        given(event.getId()).willReturn(1L);
 
         PlaceType restaurant = createMockPlaceType(1L, "RESTAURANT", "식당");
         PlaceType cafe = createMockPlaceType(2L, "CAFE", "카페");

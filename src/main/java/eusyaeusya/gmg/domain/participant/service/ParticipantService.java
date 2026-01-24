@@ -29,6 +29,8 @@ public class ParticipantService {
 
     @Transactional
     public ParticipantNameJoinResponse joinEvent(String hashUrl, ParticipantNameJoinRequest request) {
+        log.info("참여자 등록 시작: name={}", request.name());
+
         Event event = getEvent(hashUrl);
 
         validateEventStatus(hashUrl, event);

@@ -39,6 +39,7 @@ public class EventService {
 
     @Transactional
     public EventCreateResponse createEvent(final EventCreateRequest request) {
+        log.info("모임 생성 시작: title={}", request.title());
         List<PlaceType> placeTypes = placeTypeService.findByCodes(request.placeTypeCodes());
 
         Event event = Event.create(
@@ -58,6 +59,7 @@ public class EventService {
 
         eventPublisher.publishEvent(new PlaceSearchEvent(savedEvent.getId()));
 
+        log.info("모임 생성 완료: title={}", savedEvent.getTitle());
         return EventCreateResponse.from(savedEvent);
     }
 

@@ -4,6 +4,7 @@
     <!-- 공통 변수 -->
     <property name="CONSOLE_LOG_PATTERN"
               value="[%d{yyyy-MM-dd HH:mm:ss,Asia/Seoul}] [prod] [%thread] [trace:%X{traceId:-}, span:%X{spanId:-}, req:%X{requestId:-}] %-5level [%C.%M:%L] - %msg%n"/>
+    <property name="appName" value="${springAppName:-${spring.application.name:-gmg}}"/>
     <!-- JSON 콘솔 출력 (Promtail이 파싱) -->
     <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
@@ -16,11 +17,15 @@
                 <pattern>
                     {
                     "app": "${appName}",
-                    "environment": "production",
+                    "env": "production",
                     "host": "${HOSTNAME:-unknown}",
-                    "traceId": "%X{traceId:-}",
+                    "level": "%level",
+                    "logger": "%logger{36}",
+                    "thread": "%thread",
                     "spanId": "%X{spanId:-}",
-                    "requestId": "%X{requestId:-}"
+                    "msg": "%message",
+                    "class": "%C{1}",
+                    "method": "%M"
                     }
                 </pattern>
             </provider>
@@ -70,7 +75,7 @@
     <logger name="com.zaxxer.hikari" level="INFO" additivity="false">
         <appender-ref ref="ASYNC_CONSOLE"/>
     </logger>
-    
+
     <root level="INFO">
         <appender-ref ref="ASYNC_CONSOLE"/>
     </root>
