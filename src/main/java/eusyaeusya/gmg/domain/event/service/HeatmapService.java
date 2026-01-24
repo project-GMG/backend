@@ -28,12 +28,12 @@ public class HeatmapService {
     private final ParticipantUnavailableTimeRepository unavailableTimeRepository;
 
     public List<EventMainResponse.HeatmapSlot> calculateHeatmap(Event event) {
-        log.debug("히트맵 계산 시작: eventId={}", event.getId());
+        log.info("히트맵 계산 시작: eventId={}", event.getId());
 
         int totalParticipants = participantRepository.countByEventId(event.getId());
 
         if (totalParticipants == 0) {
-            log.debug("참여자가 없어 빈 히트맵 반환: eventId={}", event.getId());
+            log.info("참여자가 없어 빈 히트맵 반환: eventId={}", event.getId());
             return Collections.emptyList();
         }
 
@@ -59,7 +59,7 @@ public class HeatmapService {
                 })
                 .collect(Collectors.toList());
 
-        log.debug("히트맵 계산 완료: eventId={}, totalSlots={}, totalParticipants={}",
+        log.info("히트맵 계산 완료: eventId={}, totalSlots={}, totalParticipants={}",
                 event.getId(), heatmapData.size(), totalParticipants);
 
         return heatmapData;

@@ -150,6 +150,8 @@ public class PlaceService {
     }
 
     public PlaceListResponse getPlacesWithinRadius(String hashUrl, Long categoryId, int page, int size) {
+        log.info("반경 내 장소 조회 시작: hashUrl={}, categoryId={}", hashUrl, categoryId);
+
         Event event = getEvent(hashUrl);
         PlaceCategory category = getCategory(categoryId);
 
@@ -176,7 +178,7 @@ public class PlaceService {
 
         List<PlaceSimpleProjection> places = placesSlice.getContent();
 
-        log.info("반경 내 매장 조회 완료: eventId={}, categoryId={}, radius={}m, count={}",
+        log.info("반경 내 장소 조회 완료: eventId={}, categoryId={}, radius={}m, count={}",
                 event.getId(), categoryId, DEFAULT_RADIUS_METERS, places.size());
 
         return PlaceListResponse.from(places, placesSlice.hasNext());

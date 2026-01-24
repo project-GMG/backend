@@ -42,7 +42,7 @@ public class PlaceController implements PlaceApiSpec {
     @Override
     @GetMapping("/recommendations")
     public ApiResponse<PlaceRecommendationResponse> getRecommendations(@PathVariable String hashUrl) {
-        log.info("추천 장소 조회 요청: hashUrl={}", hashUrl);
+        log.info("GET /events/{}/places/recommendations - 추천 장소 조회 요청", hashUrl);
 
         PlaceRecommendationService.EventRecommendationResult result =
                 recommendationService.generateRecommendationsWithEventId(hashUrl);

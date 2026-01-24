@@ -12,7 +12,7 @@ public class PlaceSearchOrchestrator {
     private final PlaceSearchTransactionService transactionService;
 
     public void fetchAndSave(Long eventId) {
-        log.info("비동기 장소 검색 시작: eventId={}, thread={}", eventId, Thread.currentThread().getName());
+        log.info("비동기 장소 검색 시작: eventId={}", eventId);
 
         try {
             // 1. 장소 검색 및 저장

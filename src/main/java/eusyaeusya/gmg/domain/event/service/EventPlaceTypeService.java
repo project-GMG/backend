@@ -29,15 +29,15 @@ public class EventPlaceTypeService {
     private final PlaceCategoryService placeCategoryService;
 
     public EventPlaceTypeCategoriesResponse getAvailableCategoriesForEvent(String hashUrl) {
+        log.info("이벤트의 가능한 카테고리 조회 시작: hashUrl={}", hashUrl);
         Event event = getEvent(hashUrl);
 
         List<PlaceType> selectedPlaceTypes = getSelectedPlaceTypes(event);
-        log.info("이벤트의 선택된 PlaceType 조회: eventId={}, placeTypeCount={}",
-                event.getId(), selectedPlaceTypes.size());
 
         Map<PlaceType, List<PlaceCategory>> categoriesGroupedByPlaceType =
                 placeCategoryService.getCategoriesGroupedByPlaceType(selectedPlaceTypes);
 
+        log.info("이벤트의 가능한 카테고리 조회 완료: hashUrl={}", hashUrl);
         return buildResponse(selectedPlaceTypes, categoriesGroupedByPlaceType);
     }
 

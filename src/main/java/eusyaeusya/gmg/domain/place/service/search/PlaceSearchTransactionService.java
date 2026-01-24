@@ -30,6 +30,8 @@ public class PlaceSearchTransactionService {
      */
     @Transactional
     public void fetchAndSavePlaces(Long eventId) {
+        log.info("장소 검색 및 저장, 정보 보완 시작: eventId={}", eventId);
+
         Event event = getEvent(eventId);
 
         List<KakaoPlaceDto> placeDtos = placeFetchService.fetchPlacesForEvent(event);
@@ -50,7 +52,7 @@ public class PlaceSearchTransactionService {
         Event event = getEvent(eventId);
         event.completePlaceSearch();
 
-        log.debug("장소 검색 상태 업데이트: eventId={}, status=COMPLETED", eventId);
+        log.info("장소 검색 상태 업데이트: eventId={}, status=COMPLETED", eventId);
     }
 
     /**
