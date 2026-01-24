@@ -80,10 +80,10 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.PROD_EC2_HOST }}
-          username: ec2-user
+          username: ubuntu
           key: ${{ secrets.PROD_EC2_SSH_KEY }}
           proxy_host: ${{ secrets.MONITORING_EC2_HOST }}
-          proxy_username: ec2-user
+          proxy_username: ubuntu
           proxy_key: ${{ secrets.MONITORING_EC2_SSH_KEY }}
           script: |
             # ECR 로그인
