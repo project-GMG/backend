@@ -36,7 +36,7 @@ public class ParticipantController implements ParticipantApiSpec {
     }
 
     @Override
-    @PostMapping("/{participantId}/unavailble-times")
+    @PostMapping("/{participantId}/unavailable-times")
     public ApiResponse<ParticipantUnavailableTimeResponse> registerUnavailableTimes(
             @PathVariable String hashUrl,
             @PathVariable Long participantId,
