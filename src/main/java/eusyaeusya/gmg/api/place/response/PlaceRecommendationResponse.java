@@ -31,6 +31,7 @@ public record PlaceRecommendationResponse(
     public record PlaceInfo(
             Long placeId,
             String placeName,
+            String imageUrl,
             double score,
             int matchingDays,
             int totalDays
@@ -39,6 +40,7 @@ public record PlaceRecommendationResponse(
             return new PlaceInfo(
                     vo.placeId(),
                     vo.placeName(),
+                    vo.imageUrl(),
                     vo.score(),
                     vo.matchingDays(),
                     vo.totalDays()
