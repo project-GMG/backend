@@ -126,6 +126,7 @@ public class PlaceRecommendationService {
                             place.getId(),
                             place.getName(),
                             place.getPlaceType().getLabel(),
+                            place.getImageUrl(),
                             score,
                             matchingDays,
                             totalDays,
