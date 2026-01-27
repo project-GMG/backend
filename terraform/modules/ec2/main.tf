@@ -87,18 +87,18 @@ resource "aws_instance" "app" {
   user_data = base64encode(<<-EOF
     #!/bin/bash
     # Docker 설치
-    dnf update -y
-    dnf install -y docker
+    apt-get update -y
+    apt-get install -y docker.io
     systemctl start docker
     systemctl enable docker
-    usermod -a -G docker ec2-user
+    usermod -a -G docker ubuntu
     
     # Docker Compose 설치
     curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
     
     # AWS CLI 설치 (ECR 로그인용)
-    dnf install -y aws-cli
+    apt-get install -y awscli
   EOF
   )
 
@@ -138,6 +138,9 @@ resource "aws_instance" "monitoring" {
 
     # AWS CLI 설치 (ECR 로그인용)
     apt-get install -y awscli
+
+    # MySQL Client 설치 (RDS 접속용)
+    apt-get install -y mysql-client
   EOF
 
   tags = {
