@@ -84,23 +84,42 @@ resource "aws_instance" "app" {
     encrypted   = true
   }
 
-  user_data = base64encode(<<-EOF
+  user_data = <<-EOF
     #!/bin/bash
-    # Docker 설치
+    set -e  # 에러 발생 시 바로 종료
+
+    # 기본 업데이트 & 필요 패키지
     apt-get update -y
-    apt-get install -y docker.io
+    apt-get install -y docker.io unzip curl
+
+    # Docker 서비스 시작 & 자동 시작 설정
     systemctl start docker
     systemctl enable docker
-    usermod -a -G docker ubuntu
-    
-    # Docker Compose 설치
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
-    
-    # AWS CLI 설치 (ECR 로그인용)
-    apt-get install -y awscli
+    usermod -aG docker ubuntu
+
+    # AWS CLI v2 설치 (ARM64용 bundled installer)
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    ./aws/install
+    rm -rf awscliv2.zip aws  # 정리
+
+    # AWS CLI 버전 확인 (로그용, 옵션)
+    aws --version || echo "AWS CLI 설치 확인 실패"
+
+    # Docker Compose v2 (plugin 방식) 설치 - 최신 버전 자동
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64" \
+      -o /usr/local/lib/docker/cli-plugins/docker-compose
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+    # Docker Compose 버전 확인 (로그용)
+    docker compose version || echo "Docker Compose 설치 확인 실패"
+
+    # CloudWatch Agent 설치 (ARM64)
+    wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb
+    dpkg -i -E ./amazon-cloudwatch-agent.deb
+    rm ./amazon-cloudwatch-agent.deb
   EOF
-  )
 
   tags = {
     Name        = "${var.project_name}-app-${var.environment}"
@@ -125,22 +144,35 @@ resource "aws_instance" "monitoring" {
 
   user_data = <<-EOF
     #!/bin/bash
-    # Docker 설치
+    set -e
+
     apt-get update -y
-    apt-get install -y docker.io
+    apt-get install -y docker.io unzip curl mysql-client
+
     systemctl start docker
     systemctl enable docker
-    usermod -a -G docker ubuntu
+    usermod -aG docker ubuntu
 
-    # Docker Compose 설치
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
+    # AWS CLI v2 (ARM64)
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    ./aws/install
+    rm -rf awscliv2.zip aws
 
-    # AWS CLI 설치 (ECR 로그인용)
-    apt-get install -y awscli
+    aws --version || echo "AWS CLI 설치 확인 실패"
 
-    # MySQL Client 설치 (RDS 접속용)
-    apt-get install -y mysql-client
+    # Docker Compose v2 plugin
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64" \
+      -o /usr/local/lib/docker/cli-plugins/docker-compose
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+    docker compose version || echo "Docker Compose 설치 확인 실패"
+
+    # CloudWatch Agent 설치 (ARM64)
+    wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb
+    dpkg -i -E ./amazon-cloudwatch-agent.deb
+    rm ./amazon-cloudwatch-agent.deb
   EOF
 
   tags = {
