@@ -14,7 +14,14 @@ env:
 jobs:
   build-and-push:
     name: Build and Push to ECR
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
     environment: prod
     outputs:
       image_tag: ${{ steps.build.outputs.image_tag }}
@@ -52,7 +59,9 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile
-          platforms: linux/arm64
+          platforms: ${{ matrix.platform }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
