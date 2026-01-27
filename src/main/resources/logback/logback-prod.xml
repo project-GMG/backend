@@ -22,7 +22,6 @@
                     "level": "%level",
                     "logger": "%logger{36}",
                     "thread": "%thread",
-                    "spanId": "%X{spanId:-}",
                     "msg": "%message",
                     "class": "%C{1}",
                     "method": "%M"
