@@ -16,8 +16,11 @@ RUN apt-get update -qqy && \
     mkdir -p /certs && \
     curl -sSL -o /certs/global-bundle.pem \
         https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
-    chmod 644 /certs/global-bundle.pem
-
+    keytool -importcert -noprompt -trustcacerts \
+        -alias aws-rds-global-bundle \
+        -file /certs/global-bundle.pem \
+        -keystore $JAVA_HOME/lib/security/cacerts \
+        -storepass changeit
 COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
