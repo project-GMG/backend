@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(actuatorBasePath + "/health/**").permitAll()
                         .requestMatchers(actuatorBasePath + "/**")
                         .access(this::hasIpAddress)
                         .anyRequest().permitAll()
@@ -70,6 +71,9 @@ public class SecurityConfig {
 
         String remoteAddress = resolveClientIp(context.getRequest());
 
+        if (allowedIp == null || allowedIp.isBlank()) {
+            return new AuthorizationDecision(false);
+        }
         // 다중 IP 지원: 쉼표로 구분
         String[] allowedIps = allowedIp.split(",");
         boolean allowed = false;
