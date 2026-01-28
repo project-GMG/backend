@@ -9,15 +9,20 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -25,6 +30,9 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Value("${cors.allowed-origins:http://localhost:3000}")
+    private String allowedOrigins;
 
     @Value("${management-config.allowed-ip}")
     private String allowedIp;
@@ -34,34 +42,81 @@ public class SecurityConfig {
 
     @Bean
     @Profile("local")
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/**");
+    public SecurityFilterChain localSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authorize -> authorize
+                        .anyRequest().permitAll()
+                )
+                .headers(headers -> headers
+                        .contentTypeOptions(withDefaults())
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                        .xssProtection(HeadersConfigurer.XXssConfig::disable)
+                        .contentSecurityPolicy(csp ->
+                                csp.policyDirectives(buildCspPolicy()))
+                );
+
+        return http.build();
     }
 
     @Bean
     @Profile("!local")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .headers(headers -> headers
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-                )
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(actuatorBasePath + "/health/**").permitAll()
                         .requestMatchers(actuatorBasePath + "/**")
                         .access(this::hasIpAddress)
                         .anyRequest().permitAll()
-                );
-        http
+                )
                 .headers(headers -> headers
                         .contentTypeOptions(withDefaults())
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
                         .xssProtection(HeadersConfigurer.XXssConfig::disable)
                         .contentSecurityPolicy(csp ->
-                                csp.policyDirectives("default-src 'self'"))
+                                csp.policyDirectives(buildCspPolicy()))
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        List<String> origins = parseAllowedOrigins();
+        boolean hasWildcard = origins.stream().anyMatch("*"::equals);
+        if (hasWildcard) {
+            configuration.setAllowedOriginPatterns(List.of("*"));
+            configuration.setAllowCredentials(false);
+        } else {
+            configuration.setAllowedOrigins(origins);
+            configuration.setAllowCredentials(true);
+        }
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "X-Requested-With"));
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    private List<String> parseAllowedOrigins() {
+        return Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toList());
+    }
+
+    private String buildCspPolicy() {
+        List<String> origins = parseAllowedOrigins();
+        if (origins.isEmpty()) {
+            return "default-src 'self'";
+        }
+        return "default-src 'self' " + String.join(" ", origins);
     }
 
     private AuthorizationDecision hasIpAddress(
@@ -70,6 +125,9 @@ public class SecurityConfig {
 
         String remoteAddress = resolveClientIp(context.getRequest());
 
+        if (allowedIp == null || allowedIp.isBlank()) {
+            return new AuthorizationDecision(false);
+        }
         // 다중 IP 지원: 쉼표로 구분
         String[] allowedIps = allowedIp.split(",");
         boolean allowed = false;
