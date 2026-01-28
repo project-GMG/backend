@@ -114,6 +114,7 @@ jobs:
             KAKAO_MAP_API_KEY=${{ secrets.KAKAO_MAP_API_KEY }}
             ACTUATOR_ALLOWED_IP=${{ secrets.ACTUATOR_ALLOWED_IP }}
             GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+            CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
             EOF
             
             # 새 컨테이너 실행
