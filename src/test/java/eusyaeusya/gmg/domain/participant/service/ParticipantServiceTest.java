@@ -62,7 +62,7 @@ class ParticipantServiceTest {
         Participant mockParticipant = mock(Participant.class);
         given(mockParticipant.getId()).willReturn(1L);
         given(mockParticipant.getName()).willReturn(request.name());
-        given(mockParticipant.getJoinedAt()).willReturn(java.time.LocalDateTime.now());
+        given(mockParticipant.getJoinedAt()).willReturn(LocalDateTime.of(2024, 1, 1, 10, 0, 0));
         given(participantRepository.save(any(Participant.class))).willReturn(mockParticipant);
 
         // when
@@ -94,7 +94,7 @@ class ParticipantServiceTest {
         Participant existingParticipant = mock(Participant.class);
         given(existingParticipant.getId()).willReturn(2L);
         given(existingParticipant.getName()).willReturn("홍길동");
-        given(existingParticipant.getJoinedAt()).willReturn(java.time.LocalDateTime.now());
+        given(existingParticipant.getJoinedAt()).willReturn(LocalDateTime.of(2024, 1, 1, 10, 0, 0));
         given(participantRepository.findByEventIdAndName(1L, "홍길동")).willReturn(Optional.of(existingParticipant));
         given(participantRepository.save(existingParticipant)).willReturn(existingParticipant);
 
