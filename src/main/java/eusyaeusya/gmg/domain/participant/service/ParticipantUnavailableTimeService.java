@@ -13,7 +13,6 @@ import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
 import eusyaeusya.gmg.domain.event.service.HeatmapService;
 import eusyaeusya.gmg.domain.participant.entity.Participant;
-import eusyaeusya.gmg.domain.participant.entity.ParticipantDislikedCategory;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantUnavailableTime;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantUnavailableTimeRepository;
