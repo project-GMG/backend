@@ -34,7 +34,6 @@ public class ParticipantService {
         Event event = getEvent(hashUrl);
         validateEventStatus(hashUrl, event);
 
-//        Participant participant = Participant.create(event, request.name());
         // 기존 참여자 찾기
         Participant participant = participantRepository
                 .findByEventIdAndName(event.getId(), request.name())
@@ -42,6 +41,7 @@ public class ParticipantService {
                     log.info("새로운 참여자 생성: name={}", request.name());
                     return Participant.create(event, request.name());
                 });
+        // Participant participant = Participant.create(event, request.name())
         Participant savedParticipant = participantRepository.save(participant);
 
         log.info("참여자 등록 완료: eventId={}, participantId={}, name={}",
