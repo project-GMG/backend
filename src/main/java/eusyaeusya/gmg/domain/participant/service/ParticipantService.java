@@ -14,6 +14,7 @@ import eusyaeusya.gmg.domain.participant.entity.Participant;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,17 +38,30 @@ public class ParticipantService {
         // 기존 참여자 찾기
         Participant participant = participantRepository
                 .findByEventIdAndName(event.getId(), request.name())
-                .orElseGet(() -> {
-                    log.info("새로운 참여자 생성: name={}", request.name());
-                    return Participant.create(event, request.name());
-                });
+                .orElseGet(() -> createParticipant(event, request.name()));
         // Participant participant = Participant.create(event, request.name())
-        Participant savedParticipant = participantRepository.save(participant);
+        // Participant savedParticipant = participantRepository.save(participant);
 
         log.info("참여자 등록 완료: eventId={}, participantId={}, name={}",
-                event.getId(), savedParticipant.getId(), savedParticipant.getName());
+                event.getId(), participant.getId(), participant.getName());
 
-        return ParticipantNameJoinResponse.from(savedParticipant);
+        return ParticipantNameJoinResponse.from(participant);
+    }
+
+    private Participant createParticipant(Event event, String name) {
+        try{
+            log.info("새로운 참여자 생성: name={}", name);
+            Participant newParticipant = Participant.create(event, name);
+            return participantRepository.save(newParticipant);
+        }catch(DataIntegrityViolationException e){
+            log.warn("중복 참여자 생성 감지, 재조회: eventId={}, name={}", event.getId(), name);
+            return participantRepository.findByEventIdAndName(event.getId(), name)
+                    .orElseThrow(() -> new BadRequestException(
+                            ParticipantErrorCode.PARTICIPANT_ALREADY_EXISTS,
+                            String.format("참여자 저장 중 오류가 발생했습니다: %s", name)
+                    )
+            );
+        }
     }
 
     @Transactional
