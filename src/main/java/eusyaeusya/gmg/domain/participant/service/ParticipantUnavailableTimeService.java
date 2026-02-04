@@ -141,5 +141,4 @@ public class ParticipantUnavailableTimeService {
         return unavailableTimes;
     }
 
-
 }
