@@ -45,7 +45,7 @@ class ParticipantServiceTest {
     private PlaceRecommendationEventPublisher recommendationEventPublisher;
 
     @Test
-    @DisplayName("참여자 이름 등록 성공")
+    @DisplayName("참여자 이름 등록 성공 - 새로운 참여자 생성")
     void success_joinEventTest() {
         // given
         String hashUrl = "abc123";
@@ -56,10 +56,13 @@ class ParticipantServiceTest {
         given(mockEvent.getId()).willReturn(1L);
         given(eventRepository.findByHashUrl(hashUrl)).willReturn(Optional.of(mockEvent));
 
+        // 기존 참여자가 없는 경우
+        given(participantRepository.findByEventIdAndName(1L, "홍길동")).willReturn(Optional.empty());
+
         Participant mockParticipant = mock(Participant.class);
         given(mockParticipant.getId()).willReturn(1L);
         given(mockParticipant.getName()).willReturn(request.name());
-        given(mockParticipant.getJoinedAt()).willReturn(java.time.LocalDateTime.now());
+        given(mockParticipant.getJoinedAt()).willReturn(LocalDateTime.of(2024, 1, 1, 10, 0, 0));
         given(participantRepository.save(any(Participant.class))).willReturn(mockParticipant);
 
         // when
@@ -71,7 +74,41 @@ class ParticipantServiceTest {
         assertThat(response.name()).isEqualTo("홍길동");
 
         verify(eventRepository).findByHashUrl(hashUrl);
+        verify(participantRepository).findByEventIdAndName(1L, "홍길동");
         verify(participantRepository).save(any(Participant.class));
+    }
+
+    @Test
+    @DisplayName("참여자 이름 등록 성공 - 기존 참여자 재사용")
+    void success_joinEvent_reuseExistingParticipant() {
+        // given
+        String hashUrl = "abc123";
+        ParticipantNameJoinRequest request = new ParticipantNameJoinRequest("홍길동");
+
+        Event mockEvent = mock(Event.class);
+        given(mockEvent.isClosed()).willReturn(false);
+        given(mockEvent.getId()).willReturn(1L);
+        given(eventRepository.findByHashUrl(hashUrl)).willReturn(Optional.of(mockEvent));
+
+        // 기존 참여자가 존재하는 경우
+        Participant existingParticipant = mock(Participant.class);
+        given(existingParticipant.getId()).willReturn(2L);
+        given(existingParticipant.getName()).willReturn("홍길동");
+        given(existingParticipant.getJoinedAt()).willReturn(LocalDateTime.of(2024, 1, 1, 10, 0, 0));
+        given(participantRepository.findByEventIdAndName(1L, "홍길동")).willReturn(Optional.of(existingParticipant));
+        given(participantRepository.save(existingParticipant)).willReturn(existingParticipant);
+
+        // when
+        ParticipantNameJoinResponse response = participantService.joinEvent(hashUrl, request);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.participantId()).isEqualTo(2L);
+        assertThat(response.name()).isEqualTo("홍길동");
+
+        verify(eventRepository).findByHashUrl(hashUrl);
+        verify(participantRepository).findByEventIdAndName(1L, "홍길동");
+        verify(participantRepository).save(existingParticipant);
     }
 
     @Test
