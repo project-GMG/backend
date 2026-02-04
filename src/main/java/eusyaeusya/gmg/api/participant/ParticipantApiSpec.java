@@ -3,15 +3,13 @@ package eusyaeusya.gmg.api.participant;
 import eusyaeusya.gmg.api.participant.request.ParticipantDislikedRequest;
 import eusyaeusya.gmg.api.participant.request.ParticipantNameJoinRequest;
 import eusyaeusya.gmg.api.participant.request.ParticipantUnavailableTimeRequest;
-import eusyaeusya.gmg.api.participant.response.ParticipantCompleteResponse;
-import eusyaeusya.gmg.api.participant.response.ParticipantDislikedResponse;
-import eusyaeusya.gmg.api.participant.response.ParticipantNameJoinResponse;
-import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
+import eusyaeusya.gmg.api.participant.response.*;
 import eusyaeusya.gmg.common.api.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,6 +59,18 @@ public interface ParticipantApiSpec {
     )
     @PostMapping
     ApiResponse<ParticipantCompleteResponse> completeParticipation(
+            @Parameter(description = "이벤트 해시 URL", example = "abc123")
+            @PathVariable String hashUrl,
+            @Parameter(description = "참여자 ID", example = "1")
+            @PathVariable Long participantId
+    );
+
+    @Operation(
+            summary = "참여자의 불가능한 시간 조회",
+            description = "참여자가 등록한 불가능한 시간대를 조회합니다."
+    )
+    @GetMapping("/{participantId}/unavailable-times")
+    ApiResponse<ParticipantUnavailableTimeListResponse> getUnavailableTimes(
             @Parameter(description = "이벤트 해시 URL", example = "abc123")
             @PathVariable String hashUrl,
             @Parameter(description = "참여자 ID", example = "1")
