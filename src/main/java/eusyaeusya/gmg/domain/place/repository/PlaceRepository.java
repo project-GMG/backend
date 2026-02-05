@@ -46,4 +46,27 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
             @Param("maxLng") double maxLng,
             Pageable pageable
     );
+
+    @Query(value = """
+            SELECT p.*
+            FROM places p
+            WHERE p.place_type_id IN (:placeTypeIds)
+              AND p.is_active = true
+              AND p.latitude BETWEEN :minLat AND :maxLat
+              AND p.longitude BETWEEN :minLng AND :maxLng
+              AND ST_Distance_Sphere(
+                    POINT(p.longitude, p.latitude),
+                    POINT(:centerLng, :centerLat)
+                  ) <= :radiusMeters
+            """, nativeQuery = true)
+    List<Place> findPlacesWithinRadiusByPlaceTypeIds(
+            @Param("placeTypeIds") List<Long> placeTypeIds,
+            @Param("centerLat") double centerLat,
+            @Param("centerLng") double centerLng,
+            @Param("radiusMeters") int radiusMeters,
+            @Param("minLat") double minLat,
+            @Param("maxLat") double maxLat,
+            @Param("minLng") double minLng,
+            @Param("maxLng") double maxLng
+    );
 }
