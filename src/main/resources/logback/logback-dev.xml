@@ -32,6 +32,11 @@
     <logger name="org.springframework.web" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
     </logger>
+
+    <logger name="org.flywaydb" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
     <!-- Logger 설정 -->
     <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>

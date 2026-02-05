@@ -14,8 +14,7 @@ ALTER TABLE participants
     ADD CONSTRAINT fk_participants_event
         FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE;
 
-CREATE INDEX idx_event_participant
-    ON participants (event_id, name);
+CREATE UNIQUE INDEX uk_event_name ON participants (event_id, name);
 
 CREATE INDEX idx_participants_status
     ON participants (status);
