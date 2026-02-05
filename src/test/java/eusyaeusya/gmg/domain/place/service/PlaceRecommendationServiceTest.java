@@ -23,6 +23,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -45,14 +48,16 @@ class PlaceRecommendationServiceTest {
     private ParticipantDislikedCategoryRepository dislikedCategoryRepository;
 
     @Test
-    @DisplayName("이벤트에 설정된 PlaceType에 해당하는 장소들만 추천한다")
-    void generateRecommendations_FiltersByEventPlaceTypes() {
+    @DisplayName("이벤트 위치 기준 반경 내에서 설정된 PlaceType에 해당하는 장소들만 추천한다")
+    void generateRecommendations_FiltersByEventLocationAndPlaceTypes() {
         // given
         Long eventId = 1L;
         Event event = mock(Event.class);
         given(event.getId()).willReturn(eventId);
         given(event.getTotalDays()).willReturn(1);
         given(event.countDaysMatching(any())).willReturn(1);
+        given(event.getCenterLatitude()).willReturn(BigDecimal.valueOf(37.5665));
+        given(event.getCenterLongitude()).willReturn(BigDecimal.valueOf(126.9780));
         given(eventRepository.findById(eventId)).willReturn(Optional.of(event));
 
         PlaceType restaurantType = mock(PlaceType.class);
@@ -69,7 +74,9 @@ class PlaceRecommendationServiceTest {
         given(restaurant1.getPlaceType()).willReturn(restaurantType);
         given(restaurant1.getRating()).willReturn(BigDecimal.valueOf(4.5));
 
-        given(placeRepository.findAllByPlaceTypeIdInAndIsActiveTrue(any()))
+        given(placeRepository.findPlacesWithinRadiusByPlaceTypeIds(
+                anyList(), anyDouble(), anyDouble(), anyInt(),
+                anyDouble(), anyDouble(), anyDouble(), anyDouble()))
                 .willReturn(List.of(restaurant1));
 
         given(dislikedCategoryRepository.countDislikesByPlaceType(any(), any()))
