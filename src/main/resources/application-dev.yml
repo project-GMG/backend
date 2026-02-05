@@ -74,6 +74,7 @@ logging:
   config: classpath:logback/logback-dev.xml
   level:
     eusyaeusya.gmg: trace
+    org.flywaydb: DEBUG
 
 management-config:
   allowed-ip: ${ACTUATOR_ALLOWED_IP:127.0.0.1}
