@@ -204,10 +204,10 @@ public class Event extends BaseTimeEntity {
         if (status == EventStatus.EXPIRED) {
             return true;
         }
-        if (createdAt == null) {
+        if (dateStart == null) {
             return false;
         }
-        return createdAt.plusDays(EXPIRATION_DAYS).isBefore(java.time.LocalDateTime.now());
+        return dateStart.plusDays(EXPIRATION_DAYS).isBefore(LocalDate.now());
     }
 
     public void expire() {
