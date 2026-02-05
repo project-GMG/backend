@@ -4,6 +4,7 @@ import eusyaeusya.gmg.api.event.response.EventErrorCode;
 import eusyaeusya.gmg.api.event.response.EventHeatmapStreamResponse;
 import eusyaeusya.gmg.api.participant.request.ParticipantUnavailableTimeRequest;
 import eusyaeusya.gmg.api.participant.response.ParticipantErrorCode;
+import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeListResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantUnavailableTimeResponse;
 import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.api.exception.NotFoundException;
@@ -58,6 +59,30 @@ public class ParticipantUnavailableTimeService {
         sseService.broadcast(hashUrl, "heatmap-update", heatmapData);
 
         return ParticipantUnavailableTimeResponse.of(participantId, unavailableTimes.size());
+    }
+
+    //                             **List**
+    public ParticipantUnavailableTimeListResponse getUnavailableTimes(
+            String hashUrl,
+            Long participantId
+    ){
+        Event event = getEvent(hashUrl);
+        Participant participant = getParticipant(participantId);
+        validateParticipantBelongsToEvent(participant, event);
+
+        List<ParticipantUnavailableTime> unavailableTimes = unavailableTimeRepository.findAllByParticipantId(participantId);
+
+        log.info("참가자 불가능 시간 조회 완료: participantId={}, count={}", participantId, unavailableTimes.size());
+
+        return ParticipantUnavailableTimeListResponse.of(participantId, unavailableTimes);
+    }
+
+    private Event getEvent(String hashUrl) {
+        return eventRepository.findByHashUrl(hashUrl)
+                .orElseThrow(() -> new NotFoundException(
+                        EventErrorCode.EVENT_NOT_FOUND,
+                        String.format(EventErrorCode.EVENT_NOT_FOUND.getMessage(), ": %s", hashUrl)
+                ));
     }
 
     private Event getEventWithLock(String hashUrl) {
@@ -115,4 +140,5 @@ public class ParticipantUnavailableTimeService {
                 participantId, unavailableTimes.size());
         return unavailableTimes;
     }
+
 }

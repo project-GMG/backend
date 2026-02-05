@@ -92,4 +92,22 @@ public class ParticipantController implements ParticipantApiSpec {
                 response
         );
     }
+
+    @Override
+    @GetMapping("/{participantId}/unavailable-times")
+    public ApiResponse<ParticipantUnavailableTimeListResponse> getUnavailableTimes(
+            @PathVariable String hashUrl,
+            @PathVariable Long participantId
+    ) {
+        log.info("GET /event/{}/participants/{}/unavailable-times - 불가능 시간 조회",
+                hashUrl, participantId);
+
+        ParticipantUnavailableTimeListResponse response =
+                unavailableTimeService.getUnavailableTimes(hashUrl, participantId);
+
+        return ApiResponse.successWithData(
+                ParticipantSuccessCode.UNAVAILABLE_TIME_RETRIEVED,
+                response
+        );
+    }
 }

@@ -18,4 +18,14 @@ public interface ParticipantUnavailableTimeRepository extends JpaRepository<Part
             "JOIN FETCH put.participant " +
             "WHERE put.event.id = :eventId")
     List<ParticipantUnavailableTime> findAllByEventId(@Param("eventId") Long eventId);
+
+    /**
+     * 기존 시간표 조회
+     * @param participantId
+     * @return
+     */
+    @Query("SELECT put FROM ParticipantUnavailableTime put " +
+            "WHERE put.participant.id = :participantId " +
+            "ORDER BY put.unavailableDate, put.unavailableTimeStart")
+    List<ParticipantUnavailableTime> findAllByParticipantId(@Param("participantId") Long participantId);
 }

@@ -9,6 +9,7 @@ import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantDislikedCategoryRepository;
 import eusyaeusya.gmg.domain.place.entity.Place;
 import eusyaeusya.gmg.domain.place.repository.PlaceRepository;
+import eusyaeusya.gmg.domain.place.util.GeometryUtil;
 import eusyaeusya.gmg.domain.place.util.RecommendationScoreCalculator;
 import eusyaeusya.gmg.domain.place.vo.CategoryRecommendations;
 import eusyaeusya.gmg.domain.place.vo.PlaceRecommendation;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class PlaceRecommendationService {
 
     private static final int MAX_RECOMMENDATIONS_PER_PLACE_TYPE = 3;
+    private static final int DEFAULT_RADIUS_METERS = 250;
 
     private final EventRepository eventRepository;
     private final PlaceRepository placeRepository;
@@ -64,8 +66,8 @@ public class PlaceRecommendationService {
                 .map(ept -> ept.getPlaceType().getId())
                 .toList();
 
-        // 2. 이벤트에 해당하는 PlaceType을 가진 active한 장소 조회
-        List<Place> allPlaces = placeRepository.findAllByPlaceTypeIdInAndIsActiveTrue(eventPlaceTypeIds);
+        // 2. 이벤트 위치 기준 반경 내 active한 장소 조회
+        List<Place> allPlaces = findPlacesWithinRadius(event, eventPlaceTypeIds);
 
         // 3. 영업시간 필터링 - 최소 하루라도 영업하는 곳만
         List<Place> operatingPlaces = filterByOperatingHours(allPlaces, event);
@@ -80,6 +82,30 @@ public class PlaceRecommendationService {
         log.info("추천 장소 생성 완료: eventId={}", event.getId());
         // 6. PlaceType별 상위 3개씩 선택
         return selectTopRecommendations(recommendationsByPlaceType);
+    }
+
+    private List<Place> findPlacesWithinRadius(Event event, List<Long> placeTypeIds) {
+        if (placeTypeIds.isEmpty()) {
+            return List.of();
+        }
+
+        double centerLat = event.getCenterLatitude().doubleValue();
+        double centerLng = event.getCenterLongitude().doubleValue();
+
+        GeometryUtil.BoundingBox boundingBox = GeometryUtil.calculateBoundingBox(
+                centerLat, centerLng, DEFAULT_RADIUS_METERS
+        );
+
+        return placeRepository.findPlacesWithinRadiusByPlaceTypeIds(
+                placeTypeIds,
+                centerLat,
+                centerLng,
+                DEFAULT_RADIUS_METERS,
+                boundingBox.minLat(),
+                boundingBox.maxLat(),
+                boundingBox.minLng(),
+                boundingBox.maxLng()
+        );
     }
 
     private List<Place> filterByOperatingHours(List<Place> places, Event event) {

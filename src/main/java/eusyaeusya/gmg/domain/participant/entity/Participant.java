@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
         name = "participants",
         indexes = {
                 @Index(name = "idx_event_participant", columnList = "event_id, name")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_event_name", columnNames = {"event_id", "name"})
         }
 )
 @Getter
