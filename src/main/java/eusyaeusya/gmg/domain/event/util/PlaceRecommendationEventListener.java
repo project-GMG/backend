@@ -9,7 +9,10 @@ import eusyaeusya.gmg.domain.place.vo.CategoryRecommendations;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
 
@@ -22,7 +25,8 @@ public class PlaceRecommendationEventListener {
     private final SseService sseService;
     private final EventRepository eventRepository;
 
-    @EventListener
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleRecommendationUpdate(PlaceRecommendationUpdateEvent event) {
         Long eventId = event.eventId();
         log.info("추천 업데이트 이벤트 처리 시작: eventId={}", eventId);

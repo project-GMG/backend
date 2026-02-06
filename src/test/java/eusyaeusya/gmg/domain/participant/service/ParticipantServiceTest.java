@@ -128,6 +128,8 @@ class ParticipantServiceTest {
         given(mockParticipant.isNotBelongsToEvent(mockEvent)).willReturn(false);
         given(participantRepository.findById(participantId)).willReturn(Optional.of(mockParticipant));
 
+        given(mockParticipant.getEventId()).willReturn(100L);
+
         // when
         ParticipantCompleteResponse response = participantService.completeParticipation(hashUrl, participantId);
 
@@ -138,6 +140,7 @@ class ParticipantServiceTest {
         assertThat(response.completedAt()).isNotNull();
 
         verify(mockParticipant).complete();
+        verify(recommendationEventPublisher).publishUpdate(100L);
     }
 
     @Test
@@ -159,6 +162,8 @@ class ParticipantServiceTest {
         given(mockParticipant.isNotBelongsToEvent(mockEvent)).willReturn(false);
         given(participantRepository.findById(participantId)).willReturn(Optional.of(mockParticipant));
 
+        given(mockParticipant.getEventId()).willReturn(100L);
+
         // when
         ParticipantCompleteResponse response = participantService.completeParticipation(hashUrl, participantId);
 
@@ -167,6 +172,7 @@ class ParticipantServiceTest {
         assertThat(response.status()).isEqualTo(ParticipantStatus.COMPLETED);
 
         verify(mockParticipant).complete();
+        verify(recommendationEventPublisher).publishUpdate(100L);
     }
 
     @Test

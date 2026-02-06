@@ -3,10 +3,13 @@ package eusyaeusya.gmg.config.sse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -39,6 +42,7 @@ public class SseService {
         } catch (IOException e) {
             log.warn("SSE 연결 완료 이벤트 전송 실패: hashUrl={}", hashUrl, e);
             emitters.remove(emitter);
+            return emitter;
         }
 
         emitter.onCompletion(() -> {
@@ -55,9 +59,8 @@ public class SseService {
         });
 
         emitter.onError(e -> {
-            log.warn("SSE 구독 에러: hashUrl={}", hashUrl, e);
+            log.debug("SSE 구독 에러: hashUrl={}, error={}", hashUrl, e.getMessage());
             emitters.remove(emitter);
-            emitter.completeWithError(e);
             cleanupEmptyList(hashUrl);
         });
 
@@ -72,24 +75,43 @@ public class SseService {
             return;
         }
 
-        log.info("브로드캐스트 시작: hashUrl={}, eventName={}, 구독자 수={}",
-                hashUrl, eventName, emitters.size());
+        String jsonData;
+        try {
+            jsonData = objectMapper.writeValueAsString(data);
+        } catch (Exception e) {
+            log.error("데이터 직렬화 실패: hashUrl={}, eventName={}", hashUrl, eventName, e);
+            return;
+        }
+
+        log.info("브로드캐스트 시작: hashUrl={}, eventName={}, 구독자={}, 크기={}bytes",
+                hashUrl, eventName, emitters.size(), jsonData.length());
 
         int successCount = 0;
         int failCount = 0;
+        List<SseEmitter> deadEmitters = new ArrayList<>();
 
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
                         .name(eventName)
-                        .data(data));
+                        .data(jsonData, MediaType.APPLICATION_JSON));
                 successCount++;
             } catch (IOException e) {
-                log.warn("SSE 전송 실패: hashUrl={}, eventName={}", hashUrl, eventName, e);
-                emitters.remove(emitter);
-                emitter.completeWithError(e);
+                String msg = e.getMessage();
+                if (msg != null && (msg.contains("Broken pipe") ||
+                        msg.contains("Connection reset"))) {
+                    log.debug("SSE 연결 종료됨: hashUrl={}, eventName={}", hashUrl, eventName);
+                } else {
+                    log.warn("SSE 전송 실패: hashUrl={}, eventName={}, error={}",
+                            hashUrl, eventName, msg);
+                }
+                deadEmitters.add(emitter);
                 failCount++;
             }
+        }
+
+        if (!deadEmitters.isEmpty()) {
+            emitters.removeAll(deadEmitters);
         }
 
         log.info("브로드캐스트 완료: hashUrl={}, eventName={}, 성공={}, 실패={}",

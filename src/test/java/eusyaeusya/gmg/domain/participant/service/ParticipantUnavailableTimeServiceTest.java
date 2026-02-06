@@ -10,11 +10,11 @@ import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.config.sse.SseService;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
-import eusyaeusya.gmg.domain.event.service.HeatmapService;
 import eusyaeusya.gmg.domain.participant.entity.Participant;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantUnavailableTime;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantUnavailableTimeRepository;
+import eusyaeusya.gmg.domain.participant.util.HeatmapUpdateEventPublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,10 +50,7 @@ class ParticipantUnavailableTimeServiceTest {
     private EventRepository eventRepository;
 
     @Mock
-    private HeatmapService heatmapService;
-
-    @Mock
-    private SseService sseService;
+    private HeatmapUpdateEventPublisher heatmapUpdateEventPublisher;
 
     @Test
     @DisplayName("불가능 시간 등록 성공")
@@ -72,9 +69,6 @@ class ParticipantUnavailableTimeServiceTest {
 
         ParticipantUnavailableTimeRequest request = createValidRequest(LocalDate.now());
 
-        EventHeatmapStreamResponse mockHeatmapResponse = mock(EventHeatmapStreamResponse.class);
-        given(heatmapService.calculateHeatmapForStream(event)).willReturn(mockHeatmapResponse);
-
         // when
         ParticipantUnavailableTimeResponse response = unavailableTimeService.registerUnavailableTimes(
                 hashUrl, participantId, request
@@ -89,8 +83,7 @@ class ParticipantUnavailableTimeServiceTest {
         then(unavailableTimeRepository).should().saveAll(captor.capture());
         assertThat(captor.getValue()).hasSize(request.unavailableTimes().size());
 
-        then(heatmapService).should(times(1)).calculateHeatmapForStream(event);
-        then(sseService).should(times(1)).broadcast(eq(hashUrl), eq("heatmap-update"), eq(mockHeatmapResponse));
+        then(heatmapUpdateEventPublisher).should(times(1)).publishUpdate(event.getId(), hashUrl);
     }
 
     @Test
@@ -115,8 +108,7 @@ class ParticipantUnavailableTimeServiceTest {
 
         then(participantRepository).shouldHaveNoInteractions();
         then(unavailableTimeRepository).shouldHaveNoInteractions();
-        then(heatmapService).shouldHaveNoInteractions();
-        then(sseService).shouldHaveNoInteractions();
+        then(heatmapUpdateEventPublisher).shouldHaveNoInteractions();
     }
 
     @Test
@@ -141,8 +133,7 @@ class ParticipantUnavailableTimeServiceTest {
 
         then(participantRepository).shouldHaveNoInteractions();
         then(unavailableTimeRepository).shouldHaveNoInteractions();
-        then(heatmapService).shouldHaveNoInteractions();
-        then(sseService).shouldHaveNoInteractions();
+        then(heatmapUpdateEventPublisher).shouldHaveNoInteractions();
     }
 
     @Test
@@ -169,8 +160,7 @@ class ParticipantUnavailableTimeServiceTest {
                 .hasMessageContaining(ParticipantErrorCode.PARTICIPANT_NOT_FOUND.getMessage());
 
         then(unavailableTimeRepository).shouldHaveNoInteractions();
-        then(heatmapService).shouldHaveNoInteractions();
-        then(sseService).shouldHaveNoInteractions();
+        then(heatmapUpdateEventPublisher).shouldHaveNoInteractions();
     }
 
     @Test
@@ -201,8 +191,7 @@ class ParticipantUnavailableTimeServiceTest {
                 );
 
         then(unavailableTimeRepository).shouldHaveNoInteractions();
-        then(heatmapService).shouldHaveNoInteractions();
-        then(sseService).shouldHaveNoInteractions();
+        then(heatmapUpdateEventPublisher).shouldHaveNoInteractions();
     }
 
     @Test
@@ -222,10 +211,7 @@ class ParticipantUnavailableTimeServiceTest {
 
         ParticipantUnavailableTimeRequest request = createValidRequest(LocalDate.now());
 
-        EventHeatmapStreamResponse mockHeatmapResponse = mock(EventHeatmapStreamResponse.class);
-        given(heatmapService.calculateHeatmapForStream(event)).willReturn(mockHeatmapResponse);
-
-        InOrder inOrder = inOrder(unavailableTimeRepository, heatmapService, sseService);
+        InOrder inOrder = inOrder(unavailableTimeRepository, heatmapUpdateEventPublisher);
 
         // when
         ParticipantUnavailableTimeResponse response = unavailableTimeService.registerUnavailableTimes(
@@ -239,8 +225,7 @@ class ParticipantUnavailableTimeServiceTest {
 
         inOrder.verify(unavailableTimeRepository).deleteAllByParticipantId(participantId);
         inOrder.verify(unavailableTimeRepository).saveAll(captor.capture());
-        inOrder.verify(heatmapService).calculateHeatmapForStream(event);
-        inOrder.verify(sseService).broadcast(eq(hashUrl), eq("heatmap-update"), eq(mockHeatmapResponse));
+        inOrder.verify(heatmapUpdateEventPublisher).publishUpdate(event.getId(), hashUrl);
 
         assertThat(captor.getValue()).hasSize(request.unavailableTimes().size());
     }
