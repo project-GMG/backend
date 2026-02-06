@@ -16,9 +16,12 @@ import eusyaeusya.gmg.domain.participant.entity.Participant;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantUnavailableTime;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantUnavailableTimeRepository;
+import eusyaeusya.gmg.domain.participant.util.HeatmapUpdateEvent;
+import eusyaeusya.gmg.domain.participant.util.HeatmapUpdateEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +35,7 @@ public class ParticipantUnavailableTimeService {
     private final ParticipantUnavailableTimeRepository unavailableTimeRepository;
     private final ParticipantRepository participantRepository;
     private final EventRepository eventRepository;
-    private final HeatmapService heatmapService;
-    private final SseService sseService;
+    private final HeatmapUpdateEventPublisher heatmapUpdateEventPublisher;
 
     @Transactional
     public ParticipantUnavailableTimeResponse registerUnavailableTimes(
@@ -55,8 +57,7 @@ public class ParticipantUnavailableTimeService {
         List<ParticipantUnavailableTime> unavailableTimes =
                 createUnavailableTimes(participantId, request, event, participant);
 
-        EventHeatmapStreamResponse heatmapData = heatmapService.calculateHeatmapForStream(event);
-        sseService.broadcast(hashUrl, "heatmap-update", heatmapData);
+        heatmapUpdateEventPublisher.publishUpdate(event.getId(), hashUrl);
 
         return ParticipantUnavailableTimeResponse.of(participantId, unavailableTimes.size());
     }
