@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -20,9 +21,36 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class SseService {
 
     private static final Long DEFAULT_TIMEOUT = 60 * 60 * 1000L; // 1시간
+    private static final String HEARTBEAT_EVENT_NAME = "heartbeat";
+    private static final String HEARTBEAT_DATA = "keep-alive";
     private final ObjectMapper objectMapper;
 
     private final Map<String, CopyOnWriteArrayList<SseEmitter>> emittersByEvent = new ConcurrentHashMap<>();
+
+    @Scheduled(fixedDelay = 10000)
+    public void sendHeartbeat() {
+        if (emittersByEvent.isEmpty()) {
+            return;
+        }
+
+        log.debug("SSE Heartbeat 전송 시작");
+        emittersByEvent.forEach((hashUrl, emitters) -> {
+            List<SseEmitter> deadEmitters = new ArrayList<>();
+            for (SseEmitter emitter : emitters) {
+                try {
+                    emitter.send(SseEmitter.event()
+                            .comment("keep-alive"));
+                } catch (IOException e) {
+                    log.warn("Heartbeat 전송 실패, emitter 제거: {}", e.getMessage());
+                    deadEmitters.add(emitter);
+                }
+            }
+            if (!deadEmitters.isEmpty()) {
+                emitters.removeAll(deadEmitters);
+                cleanupEmptyList(hashUrl);
+            }
+        });
+    }
 
     public SseEmitter subscribe(String hashUrl) {
         SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);

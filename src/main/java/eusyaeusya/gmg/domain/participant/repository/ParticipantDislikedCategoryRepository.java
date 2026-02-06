@@ -15,13 +15,13 @@ public interface ParticipantDislikedCategoryRepository extends JpaRepository<Par
     void deleteAllByParticipantId(@Param("participantId") Long participantId);
 
     @Query("""
-            SELECT pdc.category.placeType.id, COUNT(DISTINCT pdc.participant.id)
+            SELECT pdc.category.id, COUNT(DISTINCT pdc.participant.id)
             FROM ParticipantDislikedCategory pdc
             WHERE pdc.event.id = :eventId
             AND pdc.participant.participantStatus = :status
-            GROUP BY pdc.category.placeType.id
+            GROUP BY pdc.category.id
             """)
-    List<Object[]> countDislikesByPlaceType(
+    List<Object[]> countDislikesByCategory(
             @Param("eventId") Long eventId,
             @Param("status") ParticipantStatus status
     );
