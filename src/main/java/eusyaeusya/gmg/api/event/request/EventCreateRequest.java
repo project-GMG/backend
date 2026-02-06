@@ -57,12 +57,12 @@ public record EventCreateRequest(
     }
 
     public record DateRangeInfo(
-            @Schema(description = "시작 날짜", example = "2025-12-11", type = "string")
+            @Schema(description = "시작 날짜", type = "string", format = "date")
             @NotNull(message = "시작 날짜는 필수입니다")
             @FutureOrPresent(message = "시작 날짜는 현재 날짜 또는 이후여야 합니다")
             LocalDate startDate,
 
-            @Schema(description = "종료 날짜", example = "2025-12-11", type = "string")
+            @Schema(description = "종료 날짜", type = "string", format = "date")
             @NotNull(message = "종료 날짜는 필수입니다")
             LocalDate endDate
     ) {
