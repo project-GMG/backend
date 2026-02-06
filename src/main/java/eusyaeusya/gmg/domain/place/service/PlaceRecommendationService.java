@@ -72,12 +72,12 @@ public class PlaceRecommendationService {
         // 3. 영업시간 필터링 - 최소 하루라도 영업하는 곳만
         List<Place> operatingPlaces = filterByOperatingHours(allPlaces, event);
 
-        // 4. PlaceType별 비선호도 집계 (완료된 참여자만)
-        Map<Long, Integer> placeTypeDislikes = countPlaceTypeDislikes(event.getId());
+        // 4. Category별 비선호도 집계 (완료된 참여자만)
+        Map<Long, Integer> categoryDislikes = countCategoryDislikes(event.getId());
 
         // 5. PlaceType별로 그룹핑하고 점수 계산
         Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType =
-                groupAndScorePlaces(operatingPlaces, event, placeTypeDislikes);
+                groupAndScorePlaces(operatingPlaces, event, categoryDislikes);
 
         log.info("추천 장소 생성 완료: eventId={}", event.getId());
         // 6. PlaceType별 상위 3개씩 선택
@@ -117,16 +117,16 @@ public class PlaceRecommendationService {
                 .toList();
     }
 
-    private Map<Long, Integer> countPlaceTypeDislikes(Long eventId) {
-        // 완료된 참여자들의 카테고리 비선호를 PlaceType별로 집계
+    private Map<Long, Integer> countCategoryDislikes(Long eventId) {
+        // 완료된 참여자들의 카테고리 비선호를 Category별로 집계
         List<Object[]> results = dislikedCategoryRepository
-                .countDislikesByPlaceType(eventId, ParticipantStatus.COMPLETED);
+                .countDislikesByCategory(eventId, ParticipantStatus.COMPLETED);
 
         Map<Long, Integer> dislikes = new HashMap<>();
         for (Object[] result : results) {
-            Long placeTypeId = (Long) result[0];
+            Long categoryId = (Long) result[0];
             Long count = (Long) result[1];
-            dislikes.put(placeTypeId, count.intValue());
+            dislikes.put(categoryId, count.intValue());
         }
 
         return dislikes;
@@ -135,14 +135,15 @@ public class PlaceRecommendationService {
     private Map<Long, List<PlaceRecommendation>> groupAndScorePlaces(
             List<Place> places,
             Event event,
-            Map<Long, Integer> placeTypeDislikes) {
+            Map<Long, Integer> categoryDislikes) {
 
         int totalDays = event.getTotalDays();
 
         return places.stream()
                 .map(place -> {
                     Long placeTypeId = place.getPlaceType().getId();
-                    int dislikeCount = placeTypeDislikes.getOrDefault(placeTypeId, 0);
+                    Long categoryId = place.getCategory() != null ? place.getCategory().getId() : null;
+                    int dislikeCount = categoryId != null ? categoryDislikes.getOrDefault(categoryId, 0) : 0;
                     int matchingDays = event.countDaysMatching(place::isOpenOn);
                     double score = RecommendationScoreCalculator.calculateScore(
                             place, event, dislikeCount
