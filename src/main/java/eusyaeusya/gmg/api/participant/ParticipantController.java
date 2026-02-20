@@ -110,4 +110,16 @@ public class ParticipantController implements ParticipantApiSpec {
                 response
         );
     }
+
+    @Override
+    @GetMapping("/check")
+    public ApiResponse<ParticipantCheckResponse> checkParticipant(
+            @PathVariable String hashUrl,
+            @RequestParam String name) {
+        log.info("GET /event/{}/participants/check - 참여자 존재 여부 확인: name={}", hashUrl, name);
+
+        ParticipantCheckResponse response = participantService.checkParticipant(hashUrl, name);
+
+        return ApiResponse.successWithData(ParticipantSuccessCode.PARTICIPANT_CHECK_SUCCESS, response);
+    }
 }

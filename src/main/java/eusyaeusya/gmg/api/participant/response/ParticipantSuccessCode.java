@@ -11,7 +11,8 @@ public enum ParticipantSuccessCode implements SuccessCode {
     UNAVAILABLE_TIME_REGISTERED("PT-S0002", "불가능한 시간 등록이 완료되었습니다"),
     DISLIKED_REGISTERED("PT-S0003", "비선호 카테고리 및 장소 등록이 완료되었습니다"),
     PARTICIPANT_COMPLETED("PT-S0004", "참여자 정보 입력이 완료되었습니다"),
-    UNAVAILABLE_TIME_RETRIEVED("PT-S0005","참여자의 불가능한 시간을 조회했습니다")
+    UNAVAILABLE_TIME_RETRIEVED("PT-S0005","참여자의 불가능한 시간을 조회했습니다"),
+    PARTICIPANT_CHECK_SUCCESS("PT-S0006", "참여자 존재 여부를 확인했습니다")
     ;
     private final String value;
     private final String message;
