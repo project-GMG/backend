@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Participant API", description = "참여자 관련 기능을 제공합니다")
 public interface ParticipantApiSpec {
@@ -75,5 +76,17 @@ public interface ParticipantApiSpec {
             @PathVariable String hashUrl,
             @Parameter(description = "참여자 ID", example = "1")
             @PathVariable Long participantId
+    );
+
+    @Operation(
+            summary = "참여자 존재 여부 확인",
+            description = "이벤트에 해당 이름의 참여자가 존재하는지 확인합니다."
+    )
+    @GetMapping("/check")
+    ApiResponse<ParticipantCheckResponse> checkParticipant(
+            @Parameter(description = "이벤트 해시 URL", example = "abc123")
+            @PathVariable String hashUrl,
+            @Parameter(description = "확인할 참여자 이름", example = "홍길동")
+            @RequestParam String name
     );
 }

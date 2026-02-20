@@ -2,6 +2,7 @@ package eusyaeusya.gmg.domain.participant.service;
 
 import eusyaeusya.gmg.api.event.response.EventErrorCode;
 import eusyaeusya.gmg.api.participant.request.ParticipantNameJoinRequest;
+import eusyaeusya.gmg.api.participant.response.ParticipantCheckResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantCompleteResponse;
 import eusyaeusya.gmg.api.participant.response.ParticipantErrorCode;
 import eusyaeusya.gmg.api.participant.response.ParticipantNameJoinResponse;
@@ -62,6 +63,15 @@ public class ParticipantService {
                     )
             );
         }
+    }
+
+    public ParticipantCheckResponse checkParticipant(String hashUrl, String name) {
+        log.info("참여자 존재 여부 확인: hashUrl={}, name={}", hashUrl, name);
+        Event event = getEvent(hashUrl);
+        return participantRepository
+                .findByEventIdAndName(event.getId(), name)
+                .map(ParticipantCheckResponse::found)
+                .orElse(ParticipantCheckResponse.notFound());
     }
 
     @Transactional
