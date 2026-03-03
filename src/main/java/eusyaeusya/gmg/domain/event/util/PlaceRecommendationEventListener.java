@@ -46,7 +46,7 @@ public class PlaceRecommendationEventListener {
             log.info("추천 업데이트 완료: eventId={}, hashUrl={}, 카테고리 수={}",
                     eventId, eventEntity.getHashUrl(), response.recommendations().size());
         } catch (Exception e) {
-            log.error("추천 업데이트 실패: eventId={}", eventId, e);
+            log.error("추천 업데이트 실패: eventId={}, exception={}", eventId, e.getClass().getSimpleName(), e);
         }
     }
 }
