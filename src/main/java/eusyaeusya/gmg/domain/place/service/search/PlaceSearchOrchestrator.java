@@ -24,7 +24,7 @@ public class PlaceSearchOrchestrator {
             log.info("비동기 장소 검색 완료: eventId={}", eventId);
 
         } catch (Exception e) {
-            log.error("비동기 장소 검색 실패: eventId={}", eventId, e);
+            log.error("비동기 장소 검색 실패: eventId={}, exception={}", eventId, e.getClass().getSimpleName(), e);
 
             // 3. 실패 시 상태 업데이트
             updateStatusToFailedSafely(eventId);
@@ -38,7 +38,7 @@ public class PlaceSearchOrchestrator {
         try {
             transactionService.updateStatusToFailed(eventId);
         } catch (Exception e) {
-            log.error("장소 검색 실패 상태 업데이트 실패: eventId={}", eventId, e);
+            log.error("장소 검색 실패 상태 업데이트 실패: eventId={}, exception={}", eventId, e.getClass().getSimpleName(), e);
         }
     }
 }
