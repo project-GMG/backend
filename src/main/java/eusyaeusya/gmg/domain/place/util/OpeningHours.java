@@ -117,6 +117,50 @@ public class OpeningHours {
         }
     }
 
+    /**
+     * 장소 영업시간과 이벤트 시간의 교집합 TimeRange 반환.
+     * 겹치지 않으면 null 반환.
+     */
+    public TimeRange getOverlapRange(DayOfWeek dayOfWeek, LocalTime eventStart, LocalTime eventEnd) {
+        TimeRange dayHours = getTimeRange(dayOfWeek);
+        if (dayHours == null) {
+            return null;
+        }
+
+        LocalTime open = dayHours.start();
+        LocalTime close = dayHours.end();
+
+        if (open.isBefore(close)) {
+            // 일반 영업시간 (예: 09:00-22:00)
+            LocalTime overlapStart = open.isAfter(eventStart) ? open : eventStart;
+            LocalTime overlapEnd = close.isBefore(eventEnd) ? close : eventEnd;
+
+            if (!overlapStart.isBefore(overlapEnd)) {
+                return null;
+            }
+            return new TimeRange(overlapStart, overlapEnd);
+        } else {
+            // 자정 넘김 (예: 18:00-02:00)
+            // 이벤트 시간과 (open~23:59:59) 구간의 교집합
+            LocalTime overlapStart = open.isAfter(eventStart) ? open : eventStart;
+            LocalTime overlapEnd = eventEnd; // 이벤트 끝이 자정 전이므로
+
+            if (overlapStart.isBefore(overlapEnd)) {
+                return new TimeRange(overlapStart, overlapEnd);
+            }
+
+            // (00:00~close) 구간의 교집합
+            overlapStart = eventStart;
+            overlapEnd = close.isBefore(eventEnd) ? close : eventEnd;
+
+            if (overlapStart.isBefore(overlapEnd)) {
+                return new TimeRange(overlapStart, overlapEnd);
+            }
+
+            return null;
+        }
+    }
+
     public record TimeRange(LocalTime start, LocalTime end) {
 
         public static TimeRange parse(String timeStr) {

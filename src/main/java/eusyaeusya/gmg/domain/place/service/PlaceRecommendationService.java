@@ -5,8 +5,11 @@ import eusyaeusya.gmg.common.api.exception.NotFoundException;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.repository.EventPlaceTypeRepository;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.event.service.HeatmapService;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantDislikedCategoryRepository;
+import eusyaeusya.gmg.domain.participant.repository.ParticipantDislikedPlaceRepository;
+import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.place.entity.Place;
 import eusyaeusya.gmg.domain.place.repository.PlaceRepository;
 import eusyaeusya.gmg.domain.place.util.GeometryUtil;
@@ -18,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +42,9 @@ public class PlaceRecommendationService {
     private final PlaceRepository placeRepository;
     private final EventPlaceTypeRepository eventPlaceTypeRepository;
     private final ParticipantDislikedCategoryRepository dislikedCategoryRepository;
+    private final ParticipantDislikedPlaceRepository dislikedPlaceRepository;
+    private final ParticipantRepository participantRepository;
+    private final HeatmapService heatmapService;
 
     public List<CategoryRecommendations> generateRecommendations(Long eventId) {
         Event event = eventRepository.findById(eventId)
@@ -69,18 +77,36 @@ public class PlaceRecommendationService {
         // 2. 이벤트 위치 기준 반경 내 active한 장소 조회
         List<Place> allPlaces = findPlacesWithinRadius(event, eventPlaceTypeIds);
 
-        // 3. 영업시간 필터링 - 최소 하루라도 영업하는 곳만
-        List<Place> operatingPlaces = filterByOperatingHours(allPlaces, event);
+        // 3. 장소별 비호감 집계(완료된 참여자만)
+        Map<Long, Integer> placeDislikes = countPlaceDislikes(event.getId());
 
-        // 4. Category별 비선호도 집계 (완료된 참여자만)
+        // 4. 완료된 참여자의 과반수 이상이 비선호한 장소 제외
+        int completedCount = participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED);
+        List<Place> filteredPlaces;
+        if (completedCount == 0) {
+            filteredPlaces = allPlaces;
+        } else {
+            double majorityThreshold = Math.ceil(completedCount / 2.0);
+            filteredPlaces = allPlaces.stream()
+                    .filter(place -> {
+                        int dislikeCount = placeDislikes.getOrDefault(place.getId(), 0);
+                        return dislikeCount < majorityThreshold;
+                    })
+                    .toList();
+        }
+
+        // 5. Category별 비선호도 집계 (완료된 참여자만)
         Map<Long, Integer> categoryDislikes = countCategoryDislikes(event.getId());
 
-        // 5. PlaceType별로 그룹핑하고 점수 계산
+        // 6. 히트맵 강도 맵 계산
+        Map<LocalDate, Map<LocalTime, Double>> intensityMap = heatmapService.calculateIntensityMap(event);
+
+        // 7. PlaceType별로 그룹핑하고 점수 계산
         Map<Long, List<PlaceRecommendation>> recommendationsByPlaceType =
-                groupAndScorePlaces(operatingPlaces, event, categoryDislikes);
+                groupAndScorePlaces(filteredPlaces, event, categoryDislikes, intensityMap);
 
         log.info("추천 장소 생성 완료: eventId={}", event.getId());
-        // 6. PlaceType별 상위 3개씩 선택
+        // 7. PlaceType별 상위 3개씩 선택
         return selectTopRecommendations(recommendationsByPlaceType);
     }
 
@@ -108,15 +134,6 @@ public class PlaceRecommendationService {
         );
     }
 
-    private List<Place> filterByOperatingHours(List<Place> places, Event event) {
-        return places.stream()
-                .filter(place -> {
-                    int matchingDays = event.countDaysMatching(place::isOpenOn);
-                    return matchingDays > 0; // 최소 하루라도 영업해야 함
-                })
-                .toList();
-    }
-
     private Map<Long, Integer> countCategoryDislikes(Long eventId) {
         // 완료된 참여자들의 카테고리 비선호를 Category별로 집계
         List<Object[]> results = dislikedCategoryRepository
@@ -132,12 +149,29 @@ public class PlaceRecommendationService {
         return dislikes;
     }
 
+    private Map<Long, Integer> countPlaceDislikes(Long eventId) {
+        // 완료된 참여자들의 장소 비선호를 Place별로 집계
+        List<Object[]> results = dislikedPlaceRepository
+                .countDislikesByPlace(eventId, ParticipantStatus.COMPLETED);
+
+        Map<Long, Integer> dislikes = new HashMap<>();
+        for (Object[] result : results) {
+            Long placeId = (Long) result[0];
+            Long count = (Long) result[1];
+            dislikes.put(placeId, count.intValue());
+        }
+
+        return dislikes;
+    }
+
     private Map<Long, List<PlaceRecommendation>> groupAndScorePlaces(
             List<Place> places,
             Event event,
-            Map<Long, Integer> categoryDislikes) {
+            Map<Long, Integer> categoryDislikes,
+            Map<LocalDate, Map<LocalTime, Double>> intensityMap) {
 
         int totalDays = event.getTotalDays();
+        boolean useWeightedMatching = !intensityMap.isEmpty();
 
         return places.stream()
                 .map(place -> {
@@ -145,8 +179,20 @@ public class PlaceRecommendationService {
                     Long categoryId = place.getCategory() != null ? place.getCategory().getId() : null;
                     int dislikeCount = categoryId != null ? categoryDislikes.getOrDefault(categoryId, 0) : 0;
                     int matchingDays = event.countDaysMatching(place::isOpenOn);
+
+                    double weightedMatchingRate;
+                    if (useWeightedMatching) {
+                        weightedMatchingRate = RecommendationScoreCalculator.calculateWeightedMatchingRate(
+                                place, event, intensityMap
+                        );
+                    } else {
+                        weightedMatchingRate = RecommendationScoreCalculator.calculateFallbackMatchingRate(
+                                matchingDays, totalDays
+                        );
+                    }
+
                     double score = RecommendationScoreCalculator.calculateScore(
-                            place, event, dislikeCount
+                            place, event, dislikeCount, weightedMatchingRate
                     );
 
                     return new PlaceRecommendation(
@@ -170,10 +216,15 @@ public class PlaceRecommendationService {
                 .map(recommendations -> {
 
                     // 점수 내림차순 정렬 후 상위 3개
-                    List<PlaceRecommendation> topRecommendations = recommendations.stream()
-                            .sorted(Comparator.comparingDouble(PlaceRecommendation::score).reversed())
-                            .limit(MAX_RECOMMENDATIONS_PER_PLACE_TYPE)
-                            .toList();
+            List<PlaceRecommendation> topRecommendations = recommendations.stream()
+                    .sorted(
+                            Comparator.comparingDouble(PlaceRecommendation::score).reversed()
+                                    .thenComparingInt(PlaceRecommendation::matchingDays).reversed()
+                                    .thenComparing(PlaceRecommendation::placeName)
+                                    .thenComparingLong(PlaceRecommendation::placeId)
+                    )
+                    .limit(MAX_RECOMMENDATIONS_PER_PLACE_TYPE)
+                    .toList();
 
                     // PlaceTypeName은 첫 번째 추천에서 가져옴
                     String placeTypeName = topRecommendations.isEmpty()
