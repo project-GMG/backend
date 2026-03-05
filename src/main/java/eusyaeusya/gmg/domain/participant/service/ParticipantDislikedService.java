@@ -165,8 +165,8 @@ public class ParticipantDislikedService {
                     .map(Place::getId)
                     .toList();
             log.debug("등록 비선호 장소 IDs: {}", placeIdsForLog);
-        } catch (Exception ignored) {
-            // 로깅 실패는 비즈니스 로직에 영향 없음
+        } catch (Exception e) {
+            log.warn("등록 비선호 장소 IDs 로그 작성 실패: eventId={}, participantId={}", event.getId(), participant.getId(), e);
         }
 
         dislikedPlaceRepository.saveAll(dislikedPlaces);

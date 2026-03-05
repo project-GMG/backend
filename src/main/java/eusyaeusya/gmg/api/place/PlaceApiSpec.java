@@ -15,7 +15,7 @@ public interface PlaceApiSpec {
     @Operation(
             summary = "이벤트 반경 내 매장 조회",
             description = """
-                    이벤트 중심 좌표 기준 반경 500m 이내의 매장을 조회합니다.
+                    이벤트 중심 좌표 기준 반경 250m 이내의 매장을 조회합니다.
                     요청한 카테고리가 이벤트에서 선택한 PlaceType에 속하지 않으면 400 에러를 반환합니다.
                     """
     )
@@ -38,6 +38,7 @@ public interface PlaceApiSpec {
             summary = "이벤트의 추천 장소 조회",
             description = """
                     완료된 참여자들의 선호도를 기반으로 추천 장소 목록을 반환합니다.
+                    영업시간 정보가 누락된 장소도 후보군에 포함되지만, 이벤트 일시와의 매칭 점수는 낮게 계산됩니다.
                     PlaceType별로 최대 3개씩 추천됩니다.
                     """
     )

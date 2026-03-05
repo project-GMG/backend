@@ -39,7 +39,7 @@ public class HeatmapUpdateEventListener {
 
             log.info("히트맵 업데이트 완료: eventId={}, hashUrl={}", eventId, hashUrl);
         } catch (Exception e) {
-            log.error("히트맵 업데이트 실패: eventId={}, hashUrl={}", eventId, hashUrl, e);
+            log.error("히트맵 업데이트 실패: eventId={}, hashUrl={}, exception={}", eventId, hashUrl, e.getClass().getSimpleName(), e);
         }
     }
 }

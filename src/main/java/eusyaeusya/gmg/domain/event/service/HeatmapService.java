@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,6 +64,33 @@ public class HeatmapService {
                 event.getId(), heatmapData.size(), totalParticipants);
 
         return heatmapData;
+    }
+
+    public Map<LocalDate, Map<LocalTime, Double>> calculateIntensityMap(Event event) {
+        int totalParticipants = participantRepository.countByEventId(event.getId());
+
+        if (totalParticipants == 0) {
+            return Collections.emptyMap();
+        }
+
+        List<ParticipantUnavailableTime> unavailableTimes =
+                unavailableTimeRepository.findAllByEventId(event.getId());
+
+        List<TimeSlotKey> allSlots = generateAllTimeSlots(event);
+        Map<TimeSlotKey, Integer> unavailableCountMap = countUnavailableBySlot(unavailableTimes);
+
+        Map<LocalDate, Map<LocalTime, Double>> intensityMap = new LinkedHashMap<>();
+        for (TimeSlotKey slot : allSlots) {
+            int unavailableCount = unavailableCountMap.getOrDefault(slot, 0);
+            int availableCount = totalParticipants - unavailableCount;
+            double intensity = calculateIntensity(availableCount, totalParticipants);
+
+            intensityMap
+                    .computeIfAbsent(slot.date(), k -> new LinkedHashMap<>())
+                    .put(slot.time(), intensity);
+        }
+
+        return intensityMap;
     }
 
     public EventHeatmapStreamResponse calculateHeatmapForStream(Event event) {
