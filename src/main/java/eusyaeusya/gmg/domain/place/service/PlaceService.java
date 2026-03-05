@@ -66,12 +66,13 @@ public class PlaceService {
                 .map(Place::getPlaceExternalId)
                 .collect(Collectors.toSet());
 
-        // 2. 신규 장소만 필터링
+        // 2. 신규 장소만 필터링 (동시에 저장 제외 대상 필터링)
         List<KakaoPlaceDto> newDtos = placeDtos.stream()
+                .filter(dto -> !dto.isExcluded()) // 뷔페, 패밀리레스토랑 등 제외
                 .filter(dto -> !existingIds.contains(dto.id()))
                 .toList();
 
-        log.info("장소 저장: 기존={}개, 신규={}개", existingPlaces.size(), newDtos.size());
+        log.info("장소 저장: 기존={}개, 신규={}개 (제외 필터링 후)", existingPlaces.size(), newDtos.size());
 
         // 3. 신규 장소 저장
         List<Place> savedNewPlaces = saveNewPlaces(newDtos);
