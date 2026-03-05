@@ -16,7 +16,9 @@ public class OpeningHours {
     private final Map<String, String> hours;
 
     public OpeningHours(String jsonString) {
-        this.hours = parseJson(jsonString);
+        this.hours = (jsonString == null || jsonString.isEmpty())
+                ? new HashMap<>()
+                : parseJson(jsonString);
     }
 
     public static String fromGooglePeriods(List<GooglePlaceDetailsResponse.Period> periods) {
