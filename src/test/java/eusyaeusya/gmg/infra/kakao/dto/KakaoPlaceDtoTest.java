@@ -52,13 +52,13 @@ class KakaoPlaceDtoTest {
     }
 
     @Test
-    @DisplayName("닭강정은 분식으로 맵핑된다")
+    @DisplayName("닭강정은 치킨으로 맵핑된다")
     void testChickenGangjeongMapping() {
         KakaoPlaceDto gangjeong = createDto("만석닭강정", "치킨");
         
         // 치킨이지만 이름에 닭강정이 들어가면 분식
         assertThat(gangjeong.inferPlaceTypeCode()).isEqualTo("RESTAURANT");
-        assertThat(gangjeong.mapToCategoryCode()).isEqualTo("SNACK_BAR");
+        assertThat(gangjeong.mapToCategoryCode()).isEqualTo("CHICKEN");
     }
 
     @Test
