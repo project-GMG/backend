@@ -1,6 +1,7 @@
 package eusyaeusya.gmg.common.api.exception;
 
 import eusyaeusya.gmg.common.api.response.ApiResponse;
+import eusyaeusya.gmg.common.api.exception.RateLimitException;
 import eusyaeusya.gmg.infra.kakao.exception.KakaoMapApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,13 @@ public class CommonExceptionHandler {
                                                                       final HttpServletRequest request) {
         logWarn("Bad request exception", ex.getErrorCode().getValue(), request, ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(ex.getErrorCode(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRateLimitException(final RateLimitException ex,
+                                                                      final HttpServletRequest request) {
+        logWarn("Rate limit exceeded exception", ex.getErrorCode().getValue(), request, ex);
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ApiResponse.fail(ex.getErrorCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
