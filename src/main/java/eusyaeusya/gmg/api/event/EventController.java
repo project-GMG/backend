@@ -12,6 +12,8 @@ import eusyaeusya.gmg.domain.event.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -38,16 +40,13 @@ public class EventController implements EventApiSpec {
     @Override
     @GetMapping("/{hashUrl}/categories")
     public ApiResponse<EventPlaceTypeCategoriesResponse> getAvailableCategoriesForEvent(
-            @PathVariable String hashUrl
-    ) {
+            @PathVariable String hashUrl) {
         log.info("GET /events/{}/categories - 이벤트의 선택 가능한 카테고리 조회", hashUrl);
-        EventPlaceTypeCategoriesResponse response =
-                eventPlaceTypeService.getAvailableCategoriesForEvent(hashUrl);
+        EventPlaceTypeCategoriesResponse response = eventPlaceTypeService.getAvailableCategoriesForEvent(hashUrl);
 
         return ApiResponse.successWithData(
                 EventSuccessCode.EVENT_PLACE_TYPES_CATEGORIES_RETRIEVED,
-                response
-        );
+                response);
     }
 
     @Override
@@ -59,11 +58,21 @@ public class EventController implements EventApiSpec {
         return ApiResponse.successWithData(EventSuccessCode.EVENT_MAIN_RETRIEVED, response);
     }
 
-
     @GetMapping(value = "/{hashUrl}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamHeatmap(@PathVariable String hashUrl) {
+    public ResponseEntity<SseEmitter> streamHeatmap(@PathVariable String hashUrl) {
         log.info("GET /events/{}/heatmap/stream - SSE 구독 시작 (히트맵 + 추천)", hashUrl);
 
-        return sseService.subscribe(hashUrl);
+        SseEmitter emitter = sseService.subscribe(hashUrl);
+
+        HttpHeaders headers = new HttpHeaders();
+        // 프록시 환경(Cloudflare)에서 SSE 응답을 버퍼링하지 않도록 방지
+        headers.set("X-Accel-Buffering", "no");
+        headers.setCacheControl("no-cache, no-store, must-revalidate");
+        headers.setPragma("no-cache");
+        headers.setExpires(0L);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(emitter);
     }
 }

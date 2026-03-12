@@ -22,11 +22,11 @@ public class FeedbackController {
     @PostMapping
     public ApiResponse<Void> submitFeedback(
             @Valid @RequestBody FeedbackRequest request,
-            HttpServletRequest httpRequest
-    ) {
+            HttpServletRequest httpRequest) {
         String ip = resolveClientIp(httpRequest);
         if (!rateLimiter.isAllowed(ip)) {
-            throw new RateLimitException(FeedbackErrorCode.RATE_LIMIT_EXCEEDED, "피드백 요청 제한 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.");
+            throw new RateLimitException(FeedbackErrorCode.RATE_LIMIT_EXCEEDED,
+                    "피드백 요청 제한 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.");
         }
 
         String userAgent = httpRequest.getHeader("User-Agent");
@@ -37,8 +37,7 @@ public class FeedbackController {
                 request.rating(),
                 request.comment(),
                 request.page(),
-                userAgent
-        );
+                userAgent);
 
         feedbackRepository.save(feedback);
 
@@ -46,6 +45,12 @@ public class FeedbackController {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
+        // Cloudflare IP 헤더 최우선 확인
+        String cfConnectingIp = request.getHeader("CF-Connecting-IP");
+        if (cfConnectingIp != null && !cfConnectingIp.isBlank()) {
+            return cfConnectingIp.trim();
+        }
+
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isBlank()) {
             return xForwardedFor.split(",")[0].trim();

@@ -48,15 +48,12 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().permitAll()
-                )
+                        .anyRequest().permitAll())
                 .headers(headers -> headers
                         .contentTypeOptions(withDefaults())
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
                         .xssProtection(HeadersConfigurer.XXssConfig::disable)
-                        .contentSecurityPolicy(csp ->
-                                csp.policyDirectives(buildCspPolicy()))
-                );
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(buildCspPolicy())));
 
         return http.build();
     }
@@ -72,15 +69,12 @@ public class SecurityConfig {
                         .requestMatchers(actuatorBasePath + "/health/**").permitAll()
                         .requestMatchers(actuatorBasePath + "/**")
                         .access(this::hasIpAddress)
-                        .anyRequest().permitAll()
-                )
+                        .anyRequest().permitAll())
                 .headers(headers -> headers
                         .contentTypeOptions(withDefaults())
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
                         .xssProtection(HeadersConfigurer.XXssConfig::disable)
-                        .contentSecurityPolicy(csp ->
-                                csp.policyDirectives(buildCspPolicy()))
-                );
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(buildCspPolicy())));
 
         return http.build();
     }
@@ -151,7 +145,15 @@ public class SecurityConfig {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
-        // 프록시 환경: X-Forwarded-For 헤더 확인
+        // Cloudflare IP 헤더 최우선 확인
+        String cfConnectingIp = request.getHeader("CF-Connecting-IP");
+        if (cfConnectingIp != null && !cfConnectingIp.isBlank()) {
+            String clientIp = cfConnectingIp.trim();
+            log.debug("CF-Connecting-IP detected: {}", clientIp);
+            return clientIp;
+        }
+
+        // X-Forwarded-For 헤더 확인
         String xForwardedFor = request.getHeader("X-Forwarded-For");
 
         if (xForwardedFor != null && !xForwardedFor.isBlank()) {
