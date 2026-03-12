@@ -17,8 +17,7 @@ public class MaliciousCrawlingFilter extends OncePerRequestFilter {
     private static final Set<String> BLOCKED_EXTENSIONS = Set.of(
             ".php", ".env", ".asp", ".aspx", ".cgi", ".jsp",
             ".bak", ".sql", ".tar", ".gz", ".zip", ".rar",
-            ".config", ".ini", ".log", ".yml", ".yaml"
-    );
+            ".config", ".ini", ".log", ".yml", ".yaml");
 
     private static final List<String> BLOCKED_PATH_PATTERNS = List.of(
             "/wp-admin", "/wp-content", "/wp-includes", "/wp-login",
@@ -28,19 +27,17 @@ public class MaliciousCrawlingFilter extends OncePerRequestFilter {
             "/.vscode", "/.idea",
             "/vendor/", "/node_modules/",
             "/xmlrpc", "/cgi-bin",
-            "/docker-compose", "/Dockerfile"
-    );
+            "/docker-compose", "/Dockerfile");
 
     private static final List<String> BLOCKED_USER_AGENTS = List.of(
             "sqlmap", "nikto", "dirbuster", "masscan", "nmap",
             "zgrab", "gobuster", "wfuzz", "ffuf", "nuclei",
-            "httpx", "census", "scaninfo", "expanse"
-    );
+            "httpx", "census", "scaninfo", "expanse");
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String uri = request.getRequestURI().toLowerCase();
         String userAgent = request.getHeader("User-Agent");
@@ -93,6 +90,12 @@ public class MaliciousCrawlingFilter extends OncePerRequestFilter {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
+        // Cloudflare IP 헤더 최우선 확인
+        String cfConnectingIp = request.getHeader("CF-Connecting-IP");
+        if (cfConnectingIp != null && !cfConnectingIp.isBlank()) {
+            return cfConnectingIp.trim();
+        }
+
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isBlank()) {
             return xForwardedFor.split(",")[0].trim();
