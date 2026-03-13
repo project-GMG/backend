@@ -92,10 +92,10 @@ class EventServiceTest {
     }
 
     @Test
-    @DisplayName("유효하지 않은 날짜 범위로 생성 시도 시 예외 발생")
-    void fail_createEventWithInvalidDateRange() {
+    @DisplayName("선택 날짜가 35일을 초과하면 생성 시 예외 발생")
+    void fail_createEventWithTooManySelectedDates() {
         // given
-        EventCreateRequest request = createInvalidDateRangeRequest();
+        EventCreateRequest request = createTooManySelectedDatesRequest();
         List<PlaceType> mockPlaceTypes = createMockPlaceTypes();
 
         given(placeTypeService.findByCodes(request.placeTypeCodes()))
@@ -103,7 +103,7 @@ class EventServiceTest {
         // when // then
         assertThatThrownBy(() -> eventService.createEvent(request))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining(EventErrorCode.INVALID_DATE_RANGE.getMessage());
+                .hasMessageContaining(EventErrorCode.DATE_RANGE_TOO_LONG.getMessage());
         // verify
         then(eventRepository).should(never()).save(any(Event.class));
     }
@@ -174,8 +174,12 @@ class EventServiceTest {
                 .isEqualByComparingTo(new BigDecimal("35.8468"));
         assertThat(response.location().locationName()).isEqualTo("전북대학교");
 
-        assertThat(response.dateRange().startDate()).isEqualTo(LocalDate.parse("2025-11-24"));
-        assertThat(response.dateRange().endDate()).isEqualTo(LocalDate.parse("2025-11-25"));
+        assertThat(response.selectedDates()).containsExactly(
+                LocalDate.parse("2025-11-24"),
+                LocalDate.parse("2025-11-25"),
+                LocalDate.parse("2025-11-28"),
+                LocalDate.parse("2025-11-29")
+        );
 
         assertThat(response.timeRange().startTime()).isEqualTo(LocalTime.parse("09:00"));
         assertThat(response.timeRange().endTime()).isEqualTo(LocalTime.parse("23:00"));
@@ -283,9 +287,11 @@ class EventServiceTest {
                         new BigDecimal("127.1296"),
                         "전북대학교"
                 ),
-                new EventCreateRequest.DateRangeInfo(
+                List.of(
                         LocalDate.now().plusDays(1),
-                        LocalDate.now().plusDays(3)
+                        LocalDate.now().plusDays(2),
+                        LocalDate.now().plusDays(8),
+                        LocalDate.now().plusDays(9)
                 ),
                 new EventCreateRequest.TimeRangeInfo(
                         LocalTime.of(13, 0),
@@ -294,7 +300,12 @@ class EventServiceTest {
         );
     }
 
-    private EventCreateRequest createInvalidDateRangeRequest() {
+    private EventCreateRequest createTooManySelectedDatesRequest() {
+        LocalDate start = LocalDate.now().plusDays(1);
+        List<LocalDate> selectedDates = java.util.stream.IntStream.range(0, 36)
+                .mapToObj(start::plusDays)
+                .toList();
+
         return new EventCreateRequest(
                 "전북대에서 밥먹자",
                 List.of("RESTAURANT", "CAFE"),
@@ -303,10 +314,7 @@ class EventServiceTest {
                         new BigDecimal("127.1296"),
                         "전북대학교"
                 ),
-                new EventCreateRequest.DateRangeInfo(
-                        LocalDate.now().plusDays(5), // 종료일이 시작일보다 빠름
-                        LocalDate.now().plusDays(3)
-                ),
+                selectedDates,
                 new EventCreateRequest.TimeRangeInfo(
                         LocalTime.of(13, 0),
                         LocalTime.of(23, 0)
@@ -323,9 +331,11 @@ class EventServiceTest {
                         new BigDecimal("127.1296"),
                         "전북대학교"
                 ),
-                new EventCreateRequest.DateRangeInfo(
+                List.of(
                         LocalDate.now().plusDays(1),
-                        LocalDate.now().plusDays(3)
+                        LocalDate.now().plusDays(2),
+                        LocalDate.now().plusDays(8),
+                        LocalDate.now().plusDays(9)
                 ),
                 new EventCreateRequest.TimeRangeInfo(
                         LocalTime.of(23, 0), // 종료 시간이 시작 시간보다 빠름
@@ -343,8 +353,12 @@ class EventServiceTest {
     private Event createMockEvent(String hashUrl) {
         Event event = mock(Event.class, withSettings().lenient());
 
-        LocalDate dateStart = LocalDate.parse("2025-11-24");
-        LocalDate dateEnd = LocalDate.parse("2025-11-25");
+        List<LocalDate> selectedDates = List.of(
+                LocalDate.parse("2025-11-24"),
+                LocalDate.parse("2025-11-25"),
+                LocalDate.parse("2025-11-28"),
+                LocalDate.parse("2025-11-29")
+        );
         LocalTime timeStart = LocalTime.parse("09:00");
         LocalTime timeEnd = LocalTime.parse("23:00");
 
@@ -360,8 +374,7 @@ class EventServiceTest {
         given(event.getCenterLatitude()).willReturn(new BigDecimal("35.8468"));
         given(event.getCenterLongitude()).willReturn(new BigDecimal("127.1296"));
         given(event.getLocationName()).willReturn("전북대학교");
-        given(event.getDateStart()).willReturn(dateStart);
-        given(event.getDateEnd()).willReturn(dateEnd);
+        given(event.getSelectedDates()).willReturn(selectedDates);
         given(event.getTimeStart()).willReturn(timeStart);
         given(event.getTimeEnd()).willReturn(timeEnd);
         given(event.getCreatedAt()).willReturn(java.time.LocalDateTime.now());

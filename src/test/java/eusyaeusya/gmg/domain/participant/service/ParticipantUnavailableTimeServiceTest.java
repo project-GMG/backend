@@ -233,9 +233,7 @@ class ParticipantUnavailableTimeServiceTest {
     private Event mockOpenEvent() {
         Event event = mock(Event.class);
         lenient().when(event.isClosed()).thenReturn(false);
-
-        lenient().when(event.getDateStart()).thenReturn(LocalDate.now().minusDays(1));
-        lenient().when(event.getDateEnd()).thenReturn(LocalDate.now().plusDays(7));
+        lenient().when(event.containsDate(any(LocalDate.class))).thenReturn(true);
         lenient().when(event.getTimeStart()).thenReturn(LocalTime.MIN);
         lenient().when(event.getTimeEnd()).thenReturn(LocalTime.MAX);
 

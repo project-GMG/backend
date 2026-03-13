@@ -46,8 +46,7 @@ public class RecommendationScoreCalculator {
         double totalIntensity = 0.0;
         int totalEventSlots = 0;
 
-        LocalDate currentDate = event.getDateStart();
-        while (!currentDate.isAfter(event.getDateEnd())) {
+        for (LocalDate currentDate : event.getSelectedDates()) {
             // 전체 이벤트 슬롯 수 계산
             LocalTime slotTime = event.getTimeStart();
             while (slotTime.isBefore(event.getTimeEnd())) {
@@ -69,8 +68,6 @@ public class RecommendationScoreCalculator {
                     overlapSlot = overlapSlot.plusMinutes(TIME_SLOT_INTERVAL_MINUTES);
                 }
             }
-
-            currentDate = currentDate.plusDays(1);
         }
 
         return totalEventSlots == 0 ? 0.0 : totalIntensity / totalEventSlots;

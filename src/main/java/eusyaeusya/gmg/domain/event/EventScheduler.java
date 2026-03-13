@@ -24,7 +24,7 @@ public class EventScheduler {
         log.info("만료된 모임 비활성화 스케줄러 실행");
 
         LocalDate threshold = LocalDate.now().minusDays(Event.EXPIRATION_DAYS);
-        List<Event> expiredEvents = eventRepository.findByStatusNotExpiredAndDateStartBefore(threshold);
+        List<Event> expiredEvents = eventRepository.findByStatusNotExpiredAndDateEndBefore(threshold);
 
         if (expiredEvents.isEmpty()) {
             log.info("만료 처리할 모임이 없습니다.");
@@ -33,8 +33,8 @@ public class EventScheduler {
 
         for (Event event : expiredEvents) {
             event.expire();
-            log.info("모임 만료 처리: id={}, hashUrl={}, dateStart={}",
-                    event.getId(), event.getHashUrl(), event.getDateStart());
+            log.info("모임 만료 처리: id={}, hashUrl={}, lastSelectedDate={}",
+                    event.getId(), event.getHashUrl(), event.getDateEnd());
         }
 
         log.info("총 {}개의 모임이 만료 처리되었습니다.", expiredEvents.size());
