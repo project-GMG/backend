@@ -26,10 +26,10 @@ public record EventCreateRequest(
         @Valid
         LocationInfo location,
 
-        @Schema(description = "날짜 범위")
-        @NotNull(message = "날짜 범위는 필수입니다")
-        @Valid
-        DateRangeInfo dateRange,
+        @Schema(description = "선택 날짜 목록", example = "[\"2026-03-13\", \"2026-03-14\", \"2026-03-20\"]")
+        @NotEmpty(message = "선택 날짜는 최소 1개 이상이어야 합니다")
+        @Size(max = 35, message = "선택 날짜는 최대 35개까지 가능합니다")
+        List<@NotNull(message = "날짜는 필수입니다") @FutureOrPresent(message = "선택 날짜는 현재 날짜 또는 이후여야 합니다") LocalDate> selectedDates,
 
         @Schema(description = "시간 범위")
         @NotNull(message = "시간 범위는 필수입니다")
@@ -53,18 +53,6 @@ public record EventCreateRequest(
             @Schema(description = "장소명 (상세)", example = "충만치킨 전북대점")
             @Size(max = 255, message = "위치 이름은 최대 255자까지 입력 가능합니다")
             String locationName
-    ) {
-    }
-
-    public record DateRangeInfo(
-            @Schema(description = "시작 날짜", type = "string", format = "date")
-            @NotNull(message = "시작 날짜는 필수입니다")
-            @FutureOrPresent(message = "시작 날짜는 현재 날짜 또는 이후여야 합니다")
-            LocalDate startDate,
-
-            @Schema(description = "종료 날짜", type = "string", format = "date")
-            @NotNull(message = "종료 날짜는 필수입니다")
-            LocalDate endDate
     ) {
     }
 

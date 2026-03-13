@@ -17,7 +17,7 @@ public record EventMainResponse(
         String status,
         List<PlaceTypeInfo> placeTypes,
         LocationInfo location,
-        DateRangeInfo dateRange,
+        List<LocalDate> selectedDates,
         TimeRangeInfo timeRange,
         Integer participantCount,
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -37,15 +37,6 @@ public record EventMainResponse(
             BigDecimal centerLatitude,
             BigDecimal centerLongitude,
             String locationName
-    ) {
-    }
-
-    @Builder
-    public record DateRangeInfo(
-            @JsonFormat(pattern = "yyyy-MM-dd")
-            LocalDate startDate,
-            @JsonFormat(pattern = "yyyy-MM-dd")
-            LocalDate endDate
     ) {
     }
 

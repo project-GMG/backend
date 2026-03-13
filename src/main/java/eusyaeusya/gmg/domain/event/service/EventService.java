@@ -47,8 +47,7 @@ public class EventService {
                 request.location().centerLatitude(),
                 request.location().centerLongitude(),
                 request.location().locationName(),
-                request.dateRange().startDate(),
-                request.dateRange().endDate(),
+                request.selectedDates(),
                 request.timeRange().startTime(),
                 request.timeRange().endTime()
         );
@@ -136,10 +135,7 @@ public class EventService {
                         .centerLongitude(event.getCenterLongitude())
                         .locationName(event.getLocationName())
                         .build())
-                .dateRange(EventMainResponse.DateRangeInfo.builder()
-                        .startDate(event.getDateStart())
-                        .endDate(event.getDateEnd())
-                        .build())
+                .selectedDates(event.getSelectedDates())
                 .timeRange(EventMainResponse.TimeRangeInfo.builder()
                         .startTime(event.getTimeStart())
                         .endTime(event.getTimeEnd())
