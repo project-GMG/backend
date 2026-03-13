@@ -18,6 +18,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e WHERE e.hashUrl =:hashUrl")
     Optional<Event> findByHashUrlWithLock(@Param("hashUrl") String hashUrl);
 
-    @Query("SELECT e FROM Event e WHERE e.status != 'EXPIRED' AND e.dateStart < :threshold")
-    List<Event> findByStatusNotExpiredAndDateStartBefore(@Param("threshold") LocalDate threshold);
+    @Query("SELECT e FROM Event e WHERE e.status != 'EXPIRED' AND e.dateEnd < :threshold")
+    List<Event> findByStatusNotExpiredAndDateEndBefore(@Param("threshold") LocalDate threshold);
 }

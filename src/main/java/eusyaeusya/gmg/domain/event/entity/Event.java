@@ -4,18 +4,30 @@ import eusyaeusya.gmg.api.event.response.EventErrorCode;
 import eusyaeusya.gmg.common.api.exception.BadRequestException;
 import eusyaeusya.gmg.common.audit.entity.BaseTimeEntity;
 import eusyaeusya.gmg.domain.event.util.EventHashUrlGenerator;
-import jakarta.persistence.*;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-
-import static java.time.temporal.ChronoUnit.DAYS;
 
 @Entity
 @Table(
@@ -31,7 +43,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class Event extends BaseTimeEntity {
 
     public static final int EXPIRATION_DAYS = 7;
-    private static final int MAX_DATE_RANGE_DAYS = 35;
+    private static final int MAX_SELECTED_DATES = 35;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,6 +70,15 @@ public class Event extends BaseTimeEntity {
     @Column(name = "date_end", nullable = false)
     private LocalDate dateEnd;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "event_available_dates",
+            joinColumns = @JoinColumn(name = "event_id")
+    )
+    @OrderColumn(name = "sort_order")
+    @Column(name = "available_date", nullable = false)
+    private List<LocalDate> selectedDates = new ArrayList<>();
+
     @Column(name = "time_start", nullable = false)
     private LocalTime timeStart;
 
@@ -75,33 +96,30 @@ public class Event extends BaseTimeEntity {
     @Column(name = "timezone", nullable = false, length = 64)
     private String timezone;
 
-    @Builder
     private Event(
             String hashUrl,
             String title,
             BigDecimal centerLatitude,
             BigDecimal centerLongitude,
             String locationName,
-            LocalDate dateStart,
-            LocalDate dateEnd,
+            List<LocalDate> selectedDates,
             LocalTime timeStart,
             LocalTime timeEnd,
             EventStatus status,
             PlaceSearchStatus placeSearchStatus,
             String timezone
     ) {
-        // 날짜 범위 검증
-        validateDateRange(dateStart, dateEnd);
-
-        // 시간 범위 검증
+        List<LocalDate> normalizedSelectedDates = normalizeSelectedDates(selectedDates);
         validateTimeRange(timeStart, timeEnd);
+
         this.hashUrl = hashUrl;
         this.title = title;
         this.centerLatitude = centerLatitude;
         this.centerLongitude = centerLongitude;
         this.locationName = locationName;
-        this.dateStart = dateStart;
-        this.dateEnd = dateEnd;
+        this.selectedDates = new ArrayList<>(normalizedSelectedDates);
+        this.dateStart = normalizedSelectedDates.getFirst();
+        this.dateEnd = normalizedSelectedDates.getLast();
         this.timeStart = timeStart;
         this.timeEnd = timeEnd;
         this.status = status != null ? status : EventStatus.OPEN;
@@ -114,39 +132,61 @@ public class Event extends BaseTimeEntity {
             BigDecimal centerLatitude,
             BigDecimal centerLongitude,
             String locationName,
-            LocalDate dateStart,
-            LocalDate dateEnd,
+            List<LocalDate> selectedDates,
             LocalTime timeStart,
             LocalTime timeEnd
     ) {
-        return Event.builder()
-                .hashUrl(EventHashUrlGenerator.generate())
-                .title(title)
-                .centerLatitude(centerLatitude)
-                .centerLongitude(centerLongitude)
-                .locationName(locationName)
-                .dateStart(dateStart)
-                .dateEnd(dateEnd)
-                .timeStart(timeStart)
-                .timeEnd(timeEnd)
-                .build();
+        return new Event(
+                EventHashUrlGenerator.generate(),
+                title,
+                centerLatitude,
+                centerLongitude,
+                locationName,
+                selectedDates,
+                timeStart,
+                timeEnd,
+                EventStatus.OPEN,
+                PlaceSearchStatus.PENDING,
+                "Asia/Seoul"
+        );
     }
 
-    private static void validateDateRange(LocalDate startDate, LocalDate endDate) {
-        if (startDate.isAfter(endDate)) {
+    private static List<LocalDate> normalizeSelectedDates(List<LocalDate> selectedDates) {
+        if (selectedDates == null || selectedDates.isEmpty()) {
             throw new BadRequestException(
                     EventErrorCode.INVALID_DATE_RANGE,
-                    "시작 날짜는 종료 날짜보다 이전이어야 합니다"
+                    "선택 날짜는 최소 1개 이상이어야 합니다"
             );
         }
 
-        long daysBetween = DAYS.between(startDate, endDate);
-        if (daysBetween > MAX_DATE_RANGE_DAYS) {
+        if (selectedDates.stream().anyMatch(Objects::isNull)) {
             throw new BadRequestException(
-                    EventErrorCode.DATE_RANGE_TOO_LONG,
-                    String.format("날짜 범위는 최대 %d일을 초과할 수 없습니다", MAX_DATE_RANGE_DAYS)
+                    EventErrorCode.INVALID_DATE_RANGE,
+                    "선택 날짜에 null이 포함될 수 없습니다"
             );
         }
+
+        List<LocalDate> normalized = selectedDates.stream()
+                .sorted()
+                .toList();
+
+        if (normalized.size() > MAX_SELECTED_DATES) {
+            throw new BadRequestException(
+                    EventErrorCode.DATE_RANGE_TOO_LONG,
+                    EventErrorCode.DATE_RANGE_TOO_LONG.getMessage()
+            );
+        }
+
+        for (int i = 1; i < normalized.size(); i++) {
+            if (normalized.get(i - 1).equals(normalized.get(i))) {
+                throw new BadRequestException(
+                        EventErrorCode.INVALID_DATE_RANGE,
+                        "선택 날짜는 중복될 수 없습니다"
+                );
+            }
+        }
+
+        return normalized;
     }
 
     private static void validateTimeRange(LocalTime startTime, LocalTime endTime) {
@@ -159,7 +199,19 @@ public class Event extends BaseTimeEntity {
     }
 
     public int getTotalDays() {
-        return (int) (DAYS.between(dateStart, dateEnd) + 1);
+        return selectedDates.size();
+    }
+
+    public boolean containsDate(LocalDate date) {
+        return selectedDates.contains(date);
+    }
+
+    public LocalDate getFirstSelectedDate() {
+        return selectedDates.isEmpty() ? null : selectedDates.getFirst();
+    }
+
+    public LocalDate getLastSelectedDate() {
+        return selectedDates.isEmpty() ? null : selectedDates.getLast();
     }
 
     public boolean isClosed() {
@@ -168,15 +220,11 @@ public class Event extends BaseTimeEntity {
 
     public int countDaysMatching(DateCondition condition) {
         int count = 0;
-        LocalDate current = dateStart;
-
-        while (!current.isAfter(dateEnd)) {
-            if (condition.test(current, timeStart, timeEnd)) {
+        for (LocalDate selectedDate : selectedDates) {
+            if (condition.test(selectedDate, timeStart, timeEnd)) {
                 count++;
             }
-            current = current.plusDays(1);
         }
-
         return count;
     }
 
@@ -204,10 +252,13 @@ public class Event extends BaseTimeEntity {
         if (status == EventStatus.EXPIRED) {
             return true;
         }
-        if (dateStart == null) {
+
+        LocalDate lastSelectedDate = getLastSelectedDate();
+        if (lastSelectedDate == null) {
             return false;
         }
-        return dateStart.plusDays(EXPIRATION_DAYS).isBefore(LocalDate.now());
+
+        return lastSelectedDate.plusDays(EXPIRATION_DAYS).isBefore(LocalDate.now());
     }
 
     public void expire() {
