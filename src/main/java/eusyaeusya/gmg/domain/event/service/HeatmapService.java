@@ -114,16 +114,13 @@ public class HeatmapService {
     private List<TimeSlotKey> generateAllTimeSlots(Event event) {
         List<TimeSlotKey> slots = new ArrayList<>();
 
-        LocalDate currentDate = event.getDateStart();
-        while (!currentDate.isAfter(event.getDateEnd())) {
+        for (LocalDate currentDate : event.getSelectedDates()) {
             LocalTime currentTime = event.getTimeStart();
 
             while (currentTime.isBefore(event.getTimeEnd())) {
                 slots.add(new TimeSlotKey(currentDate, currentTime));
                 currentTime = currentTime.plusMinutes(TIME_SLOT_INTERVAL_MINUTES);
             }
-
-            currentDate = currentDate.plusDays(1);
         }
 
         return slots;

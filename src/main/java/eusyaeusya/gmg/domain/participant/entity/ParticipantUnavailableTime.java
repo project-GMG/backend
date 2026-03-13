@@ -84,7 +84,7 @@ public class ParticipantUnavailableTime {
     }
 
     private void validateDate(Event event, LocalDate unavailableDate) {
-        if (unavailableDate.isBefore(event.getDateStart()) || unavailableDate.isAfter(event.getDateEnd())) {
+        if (!event.containsDate(unavailableDate)) {
             throw new BadRequestException(
                     ParticipantErrorCode.INVALID_UNAVAILABLE_DATE,
                     String.format("참여할 수 없는 날입니다: %s", unavailableDate)

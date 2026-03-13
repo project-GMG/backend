@@ -196,10 +196,30 @@ class HeatmapServiceTest {
         assertThat(result.heatmapData()).isNotEmpty();
     }
 
+    @Test
+    @DisplayName("선택되지 않은 gap day는 히트맵 슬롯에 포함되지 않는다")
+    void calculateHeatmap_skipsGapDays() {
+        Event event = createMockEvent(List.of(
+                LocalDate.parse("2025-11-21"),
+                LocalDate.parse("2025-11-22"),
+                LocalDate.parse("2025-11-28"),
+                LocalDate.parse("2025-11-29")
+        ));
+        given(participantRepository.countByEventId(event.getId())).willReturn(2);
+        given(unavailableTimeRepository.findAllByEventId(event.getId()))
+                .willReturn(Collections.emptyList());
+
+        List<EventMainResponse.HeatmapSlot> result = heatmapService.calculateHeatmap(event);
+
+        assertThat(result).extracting(EventMainResponse.HeatmapSlot::date)
+                .doesNotContain(LocalDate.parse("2025-11-23"));
+    }
+
     private Event createMockEvent() {
-        // 날짜/시간 객체를 먼저 생성
-        LocalDate startDate = LocalDate.parse("2025-11-24");
-        LocalDate endDate = LocalDate.parse("2025-11-24");
+        return createMockEvent(List.of(LocalDate.parse("2025-11-24")));
+    }
+
+    private Event createMockEvent(List<LocalDate> selectedDates) {
         LocalTime startTime = LocalTime.parse("15:00");
         LocalTime endTime = LocalTime.parse("17:00");
 
@@ -207,8 +227,7 @@ class HeatmapServiceTest {
 
         // lenient()를 사용하여 여러 번 호출되어도 동일한 값 반환
         lenient().when(event.getId()).thenReturn(1L);
-        lenient().when(event.getDateStart()).thenReturn(startDate);
-        lenient().when(event.getDateEnd()).thenReturn(endDate);
+        lenient().when(event.getSelectedDates()).thenReturn(selectedDates);
         lenient().when(event.getTimeStart()).thenReturn(startTime);
         lenient().when(event.getTimeEnd()).thenReturn(endTime);
 
