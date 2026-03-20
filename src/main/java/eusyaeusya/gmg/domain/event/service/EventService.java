@@ -10,6 +10,7 @@ import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.event.entity.EventPlaceType;
 import eusyaeusya.gmg.domain.event.repository.EventPlaceTypeRepository;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
 import eusyaeusya.gmg.domain.place.service.PlaceTypeService;
@@ -69,7 +70,7 @@ public class EventService {
 
         List<EventMainResponse.PlaceTypeInfo> placeTypes = getPlaceTypeInfos(event);
 
-        int participantCount = participantRepository.countByEventId(event.getId());
+        int participantCount = participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED);
 
         List<EventMainResponse.HeatmapSlot> heatmapData = heatmapService.calculateHeatmap(event);
 

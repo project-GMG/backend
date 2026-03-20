@@ -3,6 +3,7 @@ package eusyaeusya.gmg.domain.event.service;
 import eusyaeusya.gmg.api.event.response.EventHeatmapStreamResponse;
 import eusyaeusya.gmg.api.event.response.EventMainResponse;
 import eusyaeusya.gmg.domain.event.entity.Event;
+import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantUnavailableTime;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantUnavailableTimeRepository;
@@ -31,7 +32,8 @@ public class HeatmapService {
     public List<EventMainResponse.HeatmapSlot> calculateHeatmap(Event event) {
         log.info("히트맵 계산 시작: eventId={}", event.getId());
 
-        int totalParticipants = participantRepository.countByEventId(event.getId());
+        int totalParticipants = participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED);
+
 
         if (totalParticipants == 0) {
             log.info("참여자가 없어 빈 히트맵 반환: eventId={}", event.getId());
@@ -39,7 +41,7 @@ public class HeatmapService {
         }
 
         List<ParticipantUnavailableTime> unavailableTimes =
-                unavailableTimeRepository.findAllByEventId(event.getId());
+                unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED);
 
         List<TimeSlotKey> allSlots = generateAllTimeSlots(event);
 
@@ -67,14 +69,14 @@ public class HeatmapService {
     }
 
     public Map<LocalDate, Map<LocalTime, Double>> calculateIntensityMap(Event event) {
-        int totalParticipants = participantRepository.countByEventId(event.getId());
+        int totalParticipants = participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED);
 
         if (totalParticipants == 0) {
             return Collections.emptyMap();
         }
 
         List<ParticipantUnavailableTime> unavailableTimes =
-                unavailableTimeRepository.findAllByEventId(event.getId());
+                unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED);
 
         List<TimeSlotKey> allSlots = generateAllTimeSlots(event);
         Map<TimeSlotKey, Integer> unavailableCountMap = countUnavailableBySlot(unavailableTimes);
