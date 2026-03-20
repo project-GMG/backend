@@ -4,6 +4,7 @@ import eusyaeusya.gmg.api.event.response.EventHeatmapStreamResponse;
 import eusyaeusya.gmg.api.event.response.EventMainResponse;
 import eusyaeusya.gmg.domain.event.entity.Event;
 import eusyaeusya.gmg.domain.participant.entity.Participant;
+import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantUnavailableTime;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantUnavailableTimeRepository;
@@ -41,7 +42,7 @@ class HeatmapServiceTest {
     void calculateHeatmap_noParticipants_returnsEmpty() {
         // given
         Event event = createMockEvent();
-        given(participantRepository.countByEventId(event.getId())).willReturn(0);
+                given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(0);
 
         // when
         List<EventMainResponse.HeatmapSlot> result = heatmapService.calculateHeatmap(event);
@@ -55,8 +56,8 @@ class HeatmapServiceTest {
     void calculateHeatmap_noUnavailableTimes_allSlotsFullIntensity() {
         // given
         Event event = createMockEvent();
-        given(participantRepository.countByEventId(event.getId())).willReturn(5);
-        given(unavailableTimeRepository.findAllByEventId(event.getId()))
+                given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(5);
+        given(unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(Collections.emptyList());
 
         // when
@@ -76,7 +77,7 @@ class HeatmapServiceTest {
         Event event = createMockEvent();
         int totalParticipants = 5;
 
-        given(participantRepository.countByEventId(event.getId()))
+        given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(totalParticipants);
 
         // 3명이 11/24 15:00-16:00 불가능
@@ -86,7 +87,7 @@ class HeatmapServiceTest {
                 createUnavailableTime(event, 3L, "2025-11-24", "15:00", "16:00")
         );
 
-        given(unavailableTimeRepository.findAllByEventId(event.getId()))
+        given(unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(unavailableTimes);
 
         // when
@@ -118,7 +119,7 @@ class HeatmapServiceTest {
     void calculateHeatmap_duplicateParticipant_countsOnce() {
         // given
         Event event = createMockEvent();
-        given(participantRepository.countByEventId(event.getId())).willReturn(3);
+                given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(3);
 
         // 동일 참여자가 같은 시간대에 여러 번 등록 (실제로는 발생하지 않지만 방어)
         List<ParticipantUnavailableTime> unavailableTimes = List.of(
@@ -126,7 +127,7 @@ class HeatmapServiceTest {
                 createUnavailableTime(event, 1L, "2025-11-24", "15:00", "15:30") // 중복
         );
 
-        given(unavailableTimeRepository.findAllByEventId(event.getId()))
+        given(unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(unavailableTimes);
 
         // when
@@ -150,7 +151,7 @@ class HeatmapServiceTest {
         Event event = createMockEvent();
         int totalParticipants = 10;
 
-        given(participantRepository.countByEventId(event.getId()))
+        given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(totalParticipants);
 
         // 5명이 불가능 → 5명 가능
@@ -162,7 +163,7 @@ class HeatmapServiceTest {
                 createUnavailableTime(event, 5L, "2025-11-24", "15:00", "16:00")
         );
 
-        given(unavailableTimeRepository.findAllByEventId(event.getId()))
+        given(unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(unavailableTimes);
 
         // when
@@ -184,8 +185,8 @@ class HeatmapServiceTest {
     void calculateHeatmapForStream_convertsToStreamResponse() {
         // given
         Event event = createMockEvent();
-        given(participantRepository.countByEventId(event.getId())).willReturn(3);
-        given(unavailableTimeRepository.findAllByEventId(event.getId()))
+                given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(3);
+        given(unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(Collections.emptyList());
 
         // when
@@ -205,8 +206,8 @@ class HeatmapServiceTest {
                 LocalDate.parse("2025-11-28"),
                 LocalDate.parse("2025-11-29")
         ));
-        given(participantRepository.countByEventId(event.getId())).willReturn(2);
-        given(unavailableTimeRepository.findAllByEventId(event.getId()))
+        given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(2);
+        given(unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(Collections.emptyList());
 
         List<EventMainResponse.HeatmapSlot> result = heatmapService.calculateHeatmap(event);
