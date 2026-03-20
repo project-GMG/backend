@@ -1,5 +1,6 @@
 package eusyaeusya.gmg.domain.participant.repository;
 
+import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.entity.ParticipantUnavailableTime;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,14 +16,16 @@ public interface ParticipantUnavailableTimeRepository extends JpaRepository<Part
     void deleteAllByParticipantId(@Param("participantId") Long participantId);
 
     @Query("SELECT put FROM ParticipantUnavailableTime put " +
-            "JOIN FETCH put.participant " +
-            "WHERE put.event.id = :eventId")
-    List<ParticipantUnavailableTime> findAllByEventId(@Param("eventId") Long eventId);
+            "JOIN FETCH put.participant p " +
+            "WHERE put.event.id = :eventId " +
+            "AND p.participantStatus = :status")
+    List<ParticipantUnavailableTime> findAllByEventIdAndStatus(
+            @Param("eventId") Long eventId,
+            @Param("status") ParticipantStatus status
+    );
 
     /**
      * 기존 시간표 조회
-     * @param participantId
-     * @return
      */
     @Query("SELECT put FROM ParticipantUnavailableTime put " +
             "WHERE put.participant.id = :participantId " +
