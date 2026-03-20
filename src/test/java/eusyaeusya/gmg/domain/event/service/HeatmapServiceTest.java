@@ -42,7 +42,7 @@ class HeatmapServiceTest {
     void calculateHeatmap_noParticipants_returnsEmpty() {
         // given
         Event event = createMockEvent();
-                given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(0);
+        given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(0);
 
         // when
         List<EventMainResponse.HeatmapSlot> result = heatmapService.calculateHeatmap(event);
@@ -56,7 +56,7 @@ class HeatmapServiceTest {
     void calculateHeatmap_noUnavailableTimes_allSlotsFullIntensity() {
         // given
         Event event = createMockEvent();
-                given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(5);
+        given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(5);
         given(unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(Collections.emptyList());
 
@@ -119,7 +119,7 @@ class HeatmapServiceTest {
     void calculateHeatmap_duplicateParticipant_countsOnce() {
         // given
         Event event = createMockEvent();
-                given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(3);
+        given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(3);
 
         // 동일 참여자가 같은 시간대에 여러 번 등록 (실제로는 발생하지 않지만 방어)
         List<ParticipantUnavailableTime> unavailableTimes = List.of(
@@ -185,7 +185,7 @@ class HeatmapServiceTest {
     void calculateHeatmapForStream_convertsToStreamResponse() {
         // given
         Event event = createMockEvent();
-                given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(3);
+        given(participantRepository.countByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED)).willReturn(3);
         given(unavailableTimeRepository.findAllByEventIdAndStatus(event.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(Collections.emptyList());
 
