@@ -11,6 +11,7 @@ import eusyaeusya.gmg.domain.event.entity.EventPlaceType;
 import eusyaeusya.gmg.domain.event.entity.EventStatus;
 import eusyaeusya.gmg.domain.event.repository.EventPlaceTypeRepository;
 import eusyaeusya.gmg.domain.event.repository.EventRepository;
+import eusyaeusya.gmg.domain.participant.entity.ParticipantStatus;
 import eusyaeusya.gmg.domain.participant.repository.ParticipantRepository;
 import eusyaeusya.gmg.domain.place.entity.PlaceType;
 import eusyaeusya.gmg.domain.place.service.PlaceTypeService;
@@ -151,7 +152,7 @@ class EventServiceTest {
                 .willReturn(Optional.of(mockEvent));
         given(eventPlaceTypeRepository.findByEventWithPlaceType(mockEvent))
                 .willReturn(mockPlaceTypes);
-        given(participantRepository.countByEventId(mockEvent.getId()))
+        given(participantRepository.countByEventIdAndStatus(mockEvent.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(5);
         given(heatmapService.calculateHeatmap(mockEvent))
                 .willReturn(mockHeatmap);
@@ -199,7 +200,7 @@ class EventServiceTest {
                 .willReturn(Optional.of(mockEvent));
         given(eventPlaceTypeRepository.findByEventWithPlaceType(mockEvent))
                 .willReturn(Collections.emptyList());
-        given(participantRepository.countByEventId(mockEvent.getId()))
+        given(participantRepository.countByEventIdAndStatus(mockEvent.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(0);
         given(heatmapService.calculateHeatmap(mockEvent))
                 .willReturn(Collections.emptyList());
@@ -254,7 +255,7 @@ class EventServiceTest {
                 .willReturn(Optional.of(mockEvent));
         given(eventPlaceTypeRepository.findByEventWithPlaceType(mockEvent))
                 .willReturn(Collections.emptyList());
-        given(participantRepository.countByEventId(mockEvent.getId()))
+        given(participantRepository.countByEventIdAndStatus(mockEvent.getId(), ParticipantStatus.COMPLETED))
                 .willReturn(3);
         given(heatmapService.calculateHeatmap(mockEvent))
                 .willReturn(Collections.emptyList());
