@@ -11,8 +11,8 @@ import java.time.LocalTime;
 import java.util.List;
 
 public record ParticipantUnavailableTimeRequest(
-        @NotEmpty(message = "불가능한 시간대는 최소 1개 이상 선택해야 합니다")
-        @Valid
+//        @NotEmpty(message = "불가능한 시간대는 최소 1개 이상 선택해야 합니다")
+//        @Valid
         List<UnavailableTimeSlot> unavailableTimes
 ) {
     public record UnavailableTimeSlot(
