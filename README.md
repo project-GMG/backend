@@ -1,5 +1,7 @@
 # GMG(가면가)
-[![gmg.png](https://i.postimg.cc/Z50tkfzz/gmg.png)](https://postimg.cc/pmN1zJds)
+
+| <img width="251" height="520" alt="image" src="https://github.com/user-attachments/assets/dee88061-eac3-4951-af87-b50f977f68a8" /> | <img width="251" height="520" alt="image" src="https://github.com/user-attachments/assets/6ad969e7-7bc0-4a60-98ef-6e38032f51a6" /> |
+|:--:|:--:|
 
 ## 프로젝트 소개
 GMG는 모임 생성자가 가능한 날짜, 시간, 장소 조건을 공유하면 참여자들이 가능한 시간을 입력하고 선호하지 않는 장소를 제외해 최종 모임 후보를 좁히는 서비스입니다.
