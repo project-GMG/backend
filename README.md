@@ -1,4 +1,4 @@
-# GMG(가면가)
+# 🎶GMG(가면가)
 
 | <img width="251" height="520" alt="image" src="https://github.com/user-attachments/assets/dee88061-eac3-4951-af87-b50f977f68a8" /> | <img width="251" height="520" alt="image" src="https://github.com/user-attachments/assets/6ad969e7-7bc0-4a60-98ef-6e38032f51a6" /> |
 |:--:|:--:|
@@ -78,6 +78,7 @@ Google Maps API는 장소 상세 정보, 영업시간, 사진 URL 보강에 사�
 
 SSE 응답은 프록시 환경에서 버퍼링되지 않도록 `X-Accel-Buffering: no`와 캐시 방지 헤더를 사용합니다. 서버는 10초마다 heartbeat 코멘트를 전송해 연결을 유지합니다.
 
+## 산출물
 
-
-
+- [👀화면 구성](https://www.figma.com/design/eKG6KQxU4GObxtA2lT8HKi/%EC%9B%B9-%EC%84%9C%EB%B9%84%EC%8A%A4-%EA%B8%B0%ED%9A%8D?node-id=346-18106&p=f)
+- [📚회고](https://app.notion.com/p/GMG-33e005d7c09e80959aa9f035b0adaa8f?source=copy_link)
